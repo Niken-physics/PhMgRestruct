@@ -1,66 +1,19 @@
 //spar längsta raden
 // stoppa när vi kommer till 0:a.
-
-
 #define _USE_MATH_DEFINES
-#include <fstream> 
-#include <cmath>
 #include <iostream>
 #include <iterator>
 #include <vector>
 #include <array>
 #include <iomanip>
 #include<algorithm>
+#include <fstream> 
+#include <cmath>
+#include "Header.h"
+#include "foo.h"
 
 using namespace std;
 //declare variables
-
-const double k_B = 1.38064852 * pow(10, -23); // 
-const double bohrM = 9.274009 * pow(10, -24); //  J/T
-const double g = 2.0;
-const double H_ext = 0;
-const double M = g * bohrM * H_ext;
-
-const int size_q = 4;
-const int qpoints = size_q * size_q * size_q;
-const int size_k = 4;
-const int kpoints = size_k * size_k * size_k;
-const int branches = 12;
-const int size_ph = kpoints * branches;
-const int size_Theta = size_ph * size_ph;
-const int size_A = size_ph * qpoints;
-const int size_add = kpoints * qpoints;
-
-const double smear = pow(10, -22);
-
-//declare functions
-int add(int, int, int);
-
-double dirac(double);
-
-//f_ph(phonon,mg_alpha,mg_beta,matrixAdd, A,B,C,theta1,theta2,theta3,theta4,theta5,theta6)
-vector<double> f_ph_One(vector<double>&, vector<double>&,
-	vector<double>&, vector<int>,
-	vector<double>, vector<double>);
-
-vector<double> f_ph_Two(vector<double>&, vector<double>&,
-	vector<double>&, vector<int>,
-	vector<double>, vector<double>);
-
-//mg_alpha(phonon,mg_alpha,mg_beta,matrixAdd, alpha1,alpha2)
-vector<double> f_mg_alpha(vector<double>&, vector<double>&,
-	vector<double>&, vector<int>, vector<double>, vector<double>);
-
-//mg_beta(phonon_mg_alpha,mg_beta,matrixAdd,beta1,beta2)
-vector<double> f_mg_beta(vector<double>&, vector<double>&,
-	vector<double>&, vector<int>, vector<double>, vector<double>);
-
-//RKfour
-void RKfour(vector<double>&, vector<double>&,
-	vector<double>&, vector<int>,
-	vector<double>, vector<double>, double);
-
-void readFiles(vector<double>&, string);
 
 int main(int argc, char const* argv[]) {
 	//calculate the add matrix
@@ -157,11 +110,11 @@ int main(int argc, char const* argv[]) {
 	std::cout << "Runs this far" << std::endl;
 
 	ofstream myfile;
-	myfile.open("AvTemp.txt");
+	//myfile.open("AvTemp.txt");
 	ofstream myfileOne;
 	myfileOne.open("TotalEnergy.txt");
-	ofstream myfileTwo;
-	myfileTwo.open("tempMaxMin.txt");
+	//ofstream myfileTwo;
+	//myfileTwo.open("tempMaxMin.txt");
 	ofstream myfileThree;
 	myfileThree.open("Conservation.txt");
 
@@ -169,12 +122,32 @@ int main(int argc, char const* argv[]) {
 	double h = 1.0;
 
 	for (int t = 0; t < time_max; t++) {
+		double E_ph = 0;
+		double E_mg_alpha = 0;
+		double E_mg_beta = 0;
+		double phTot = 0;
+		double mg_alphaTot = 0;
+		double mg_betaTot = 0;
+		for (auto&& i:irrep.IRREP)
+		{
+			for(size_t b=0; b<branches; b++){
+				E_ph += phonon[i+kpoints*b] * w_ph[i+kpoints*b];
+				phTot += phonon[i+kpoints*b];
+			}
+		}
+		for (auto&& j:irrep.IRREP) 
+		{
+				E_mg_alpha += mg_alpha[j] * w_mg_alpha[j];
+				E_mg_beta += mg_beta[j] * w_mg_beta[j];
+				mg_alphaTot += mg_alpha[j];
+				mg_betaTot += mg_beta[j];
+		}
 		RKfour(phonon, mg_alpha, mg_beta, matrixAdd, A, B, h);
 	}
-	myfile.close();
+	//myfile.close();
 	myfileOne.close();
-	myfileTwo.close();
+	//myfileTwo.close();
 	myfileThree.close();
-	std::cout << "Done" << std::endl;
+	cout << "Done" << endl;
 	return 0;
 }

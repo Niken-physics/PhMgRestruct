@@ -1,36 +1,25 @@
-// creatingIrredTriplets.cpp : This file contains the 'main' function. Program execution begins and ends there.
-// Find irreducible triplets (q1,q2,q3) such that q1+q2+q3=1 (vector sum)
-
-//1. get irred points, matrices and degeneracy (weight)
-//2. apply matrices over all points record degeneracy 
-// 3. "compare triplets"
-
-//useful functions: add reciprocal vectors to get back to 1:st BZ
-//read matrices
-//apply matrices
-//get vector from index
-
+#define _USE_MATH_DEFINES
+#include<string>
+#include <fstream> 
+#include <cmath>
 #include <iostream>
+#include <iterator>
 #include <vector>
-#include <algorithm>
-#include <Eigen/Dense>
-using namespace Eigen;
+#include <array>
+#include <iomanip>
+#include<algorithm>
+#include<Eigen/Dense>
+#include "foo.h"
+#include "Header.h"
+
 using namespace std;
-//declare variables
-using std::vector;
-const int size_q = 4; //number of points sampled in each direction
-const int tot_size = size_q * size_q * size_q; // 3D
-//const int branches //number of branches
+using namespace Eigen;
 
-Vector3i get_vector(int, int);
-vector<int> vec_flip(vector<int>);
-void move_inside_BZ(Vector3i&);
-int get_third(int, int, int);
 
-int main()
+Total irrep()
 {
 	vector<int> inside;
-	for (size_t i = 0; i != tot_size; ++i)
+	for (size_t i = 0; i != qpoints; ++i)
 	{
 		inside.push_back(i);
 	}
@@ -62,11 +51,13 @@ int main()
 	vector<int> index_vector; //store the indices of points we have seen
 	vector<int> irrep; //store the indices of irreducible points
 	vector<vector<int>> matrix_index; //store indices of matrices
+	vector<vector<int>> RED; //store the indices of equivalent points
 	for (auto&& i : inside)
 	{
 		if (find(index_vector.begin(), index_vector.end(), i) == index_vector.end()) {
 			Vector3i tmp = get_vector(i, size_q);
 			irrep.push_back(i);
+			RED.push_back({});
 			for (auto&& m : matrix)
 			{
 				auto j = &m - &matrix[0];
@@ -88,6 +79,8 @@ int main()
 
 				if (find(index_vector.begin(), index_vector.end(), tmp_index) == index_vector.end()) {
 					index_vector.push_back(tmp_index);
+					RED.back().push_back(tmp_index);
+					
 				}
 
 			}
@@ -153,7 +146,7 @@ int main()
 
 		}
 	}
-	for (size_t i = 0; i < (irrep.size()); i++) {
+	/*for (size_t i = 0; i < (irrep.size()); i++) {
 		cout << "    " << endl;
 		cout << irrep[i] << "   " << numbOfTriplets[i] << "   " << (matrix_index[i].size()) << endl;
 		cout << "    " << endl;
@@ -164,8 +157,22 @@ int main()
 			}
 		}
 		*/
-	}
+	vector<Vector4i> trip;
+	for (auto&& d : degen) 
+{
+	auto i = &d - &degen[0];
+	trip.push_back({ store_trips[i][0], store_trips[i][1],store_trips[i][2],d });
+}
+	Total total;
+	IRREP IRREP;
+	total.triplets = trip;
+	int C = irrep.size();
+	IRREP.C = C;
+	IRREP.IRREP = irrep;
+	IRREP.RED = RED;
+	total.irrep = IRREP;
 
-	return 0;
+
+	return total;
 }
 

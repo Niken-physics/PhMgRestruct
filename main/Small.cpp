@@ -8,9 +8,12 @@
 #include <array>
 #include <iomanip>
 #include<algorithm>
+#include<Eigen/Dense>
+#include "foo.h"
+#include "Header.h"
 
 using namespace std;
-extern const double smear;
+using namespace Eigen;
 
 int add(int a, int b, int size_q) {
 	vector<int> v, w, u;
@@ -42,4 +45,62 @@ void readFiles(vector<double> & w, string title) {
 		}
 	}
 	in.close();
+}
+Vector3i get_vector(int index, int size)
+{
+	Vector3i v;
+	for (size_t i = 0; i < 3; i++)
+	{
+		v(i) = (index % size);
+		index /= size;
+	}
+	return v;
+
+}
+
+void move_inside_BZ(Vector3i& v) {
+	for (size_t i = 0; i < 3; i++)
+	{
+		//if (find(a.begin(), a.end(), v[i]) == a.end() && v[i]!=a.back())
+		v[i] = v[i] % size_q;
+		if (v[i] < 0) {
+			v[i] += size_q;
+		}
+	}
+}
+
+int get_third(int a, int b, int q) {
+	Vector3i vec_a = get_vector(a, q);
+	Vector3i vec_b = get_vector(b, q);
+	Vector3i vec_c;
+	vec_c << 4, 4, 4;
+	vec_c = vec_c - vec_a - vec_b;
+	move_inside_BZ(vec_c);
+	return (vec_c[0] + vec_c[1] * q + vec_c[2] * q * q);
+}
+
+vector<int> vec_flip(vector<int> v) {
+	vector<int> tmp;
+	tmp.push_back(v[0]);
+	tmp.push_back(v[2]);
+	tmp.push_back(v[1]);
+	return tmp;
+}
+
+MatrixE createSmallerM(vector<double> scatter, vector<int> index, vector<int> add)
+{
+	MatrixE tmp;
+	for (auto&& i : scatter)
+	{
+		auto count = &i - &scatter[0];
+		if (abs(i) > compare) {
+			tmp.m.push_back(i);
+			tmp.kb.push_back(index[count] % size_ph);
+			int q = index[count] / size_ph;
+			int k = index[count] % kpoints;
+			int qP = add[k + q * kpoints];
+			tmp.qqP.push_back(q + qP * qpoints);
+		}
+	}
+	return tmp;
 }

@@ -8,24 +8,25 @@
 #include <iomanip>
 #include<algorithm>
 #include <Eigen/Dense>
+#include "foo.h"
+#include "Header.h"
+
 using namespace Eigen;
 using namespace std;
-using std::vector;
-const double compare = pow(10, -6);
-struct mIndex
+
+MatrixE createSmallerM(vector<double> scatter,vector<int> index,vector<int> add)
 {
-	vector<double> m;
-	vector<int> Index;
-};
-mIndex createSmallerM(mIndex arbit)
-{
-	mIndex tmp;
-	for (auto&& i : arbit.m)
+	MatrixE tmp;
+	for (auto&& i : scatter)
 	{
-		auto count = &i - &arbit.m[0];
+		auto count = &i - &scatter[0];
 		if (abs(i) > compare) {
 			tmp.m.push_back(i);
-			tmp.Index.push_back(arbit.Index[count]);
+			tmp.kb.push_back(index[count]%size_ph);
+			int q = index[count] / size_ph;
+			int k = index[count] % kpoints;
+			int qP = add[k + q * kpoints];
+			tmp.qqP.push_back(q+qP*qpoints);
 		}
 	}
 	return tmp;
