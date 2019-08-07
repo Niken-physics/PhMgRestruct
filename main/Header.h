@@ -1,10 +1,10 @@
 #pragma once
-double k_B = 1.38064852 * pow(10, -23); // 
-double bohrM = 9.274009 * pow(10, -24); //  J/T
+constexpr double k_B = 1.38064852 * 1e-23; 
+constexpr double bohrM = 9.274009 * 1e-24;//J/T
 constexpr double g = 2.0;
 constexpr double H_ext = 0;
-double M = g * bohrM * H_ext;
-constexpr double compare = 0.000000000001; //Change later
+constexpr double M = g * bohrM * H_ext;
+constexpr double compare = 1e-10; //Change later
 
 constexpr int size_q = 4;
 constexpr int qpoints = size_q * size_q * size_q;
@@ -16,7 +16,9 @@ constexpr int size_Theta = size_ph * size_ph;
 constexpr int size_A = size_ph * qpoints;
 constexpr int size_add = kpoints * qpoints;
 
-double smear = pow(10, -22);
+constexpr double smear = 1e-22;
+
+
 struct MatrixE {
 	vector<double> m;
 	vector<int> kb;
@@ -29,6 +31,7 @@ struct MatrixPH {
 	MatrixE C;
 	MatrixE D;
 };
+
 struct MatrixMG {
 	MatrixE A;
 	MatrixE B;

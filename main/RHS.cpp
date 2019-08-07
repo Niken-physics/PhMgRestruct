@@ -115,8 +115,9 @@ for (auto&& i : irrep.IRREP)
 {
 	for (size_t b = 0; b < branches; b++)
 	{
-		for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]]) {
-			RHS[ind + b * irrep.C] == RHS[i + b * irrep.C];
+		for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]]) 
+		{
+			RHS[ind + b * kpoints] = RHS[i + b * irrep.C];
 		}
 	}
 }
@@ -153,7 +154,7 @@ vector<double> f_mg_alpha(vector<double>& phonon, vector<double>& mg_alpha, IRRE
 		for (size_t b = 0; b < branches; b++)
 		{
 			for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]]) {
-				RHS[ind + b * irrep.C] == RHS[i + b * irrep.C];
+				RHS[ind + b * irrep.C] = RHS[i + b * irrep.C];
 			}
 		}
 	}

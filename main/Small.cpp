@@ -15,19 +15,18 @@
 using namespace std;
 using namespace Eigen;
 
-int add(int a, int b, int size_q) {
-	vector<int> v, w, u;
-
-	for (int i = 0; i < 3; i++) {
-		v.push_back(a % size_q);
-		w.push_back(b % size_q);
-		u.push_back(v[i] - w[i]);
-		if (u[i] < 0) {
-			u[i] += size_q;
-		}
-		b /= size_q;
-		a /= size_q;
-	}
+int subtractIndex(int a, int b) {
+	Vector3i v = get_vector(a, size_q);
+	Vector3i w = get_vector(b, size_q);
+	Vector3i u = v - w;
+	move_inside_BZ(u);
+	return u[0]+u[1]*size_q + u[2]*size_q*size_q;
+}
+int addIndex(int a, int b) {
+	Vector3i v = get_vector(a, size_q);
+	Vector3i w = get_vector(b, size_q);
+	Vector3i u = v - w;
+	move_inside_BZ(u);
 	return u[0] + u[1] * size_q + u[2] * size_q * size_q;
 }
 
@@ -87,7 +86,14 @@ vector<int> vec_flip(vector<int> v) {
 	return tmp;
 }
 
-MatrixE createSmallerM(vector<double> scatter, vector<int> index, vector<int> add)
+bool IsZero(int a, vector<vector<int>> irrep){
+	if (find(irrep[0].begin(), irrep[0].end(), a) == irrep[0].end()) {
+		return false;
+	}
+	return true;
+}
+
+MatrixE createSmallerM(vector<double> scatter, vector<int> index, vector<int> operation,vector<vector<int>> RED)
 {
 	MatrixE tmp;
 	for (auto&& i : scatter)
@@ -97,8 +103,17 @@ MatrixE createSmallerM(vector<double> scatter, vector<int> index, vector<int> ad
 			tmp.m.push_back(i);
 			tmp.kb.push_back(index[count] % size_ph);
 			int q = index[count] / size_ph;
+			if (IsZero(q, RED)) {
+				continue;
+			}
 			int k = index[count] % kpoints;
-			int qP = add[k + q * kpoints];
+			if (IsZero(k, RED)) {
+				continue;
+			}
+			int qP = operation[k + q * kpoints];
+			if (IsZero(qP, RED)) {
+				continue;
+			}
 			tmp.qqP.push_back(q + qP * qpoints);
 		}
 	}

@@ -15,8 +15,8 @@
 using namespace std;
 using namespace Eigen;
 
-int add(int, int, int);
-
+int subtractIndex(int, int);
+int addIndex(int, int);
 double dirac(double);
 
 //f_ph(phonon,mg_alpha,mg_beta,matrixAdd, A,B,C,theta1,theta2,theta3,theta4,theta5,theta6)
@@ -30,17 +30,16 @@ vector<double> f_mg_beta(vector<double>&, vector<double>&,
 IRREP, MatrixMG);
 
 //RKfour
-void RKfour(vector<double>&, vector<double>&,
-	vector<double>&, vector<int>,
-	vector<double>, vector<double>, double);
+void RKfour(vector<double>&, vector<double>&, vector<double>&,
+	MatrixPH, IRREP, PHtwo, MatrixMG, MatrixMG, double h);
 
 void readFiles(vector<double>&, string);
 
-int get_third(int a, int b, int q);
-
-MatrixE createSmallerM(vector<double> scatter, vector<int> index, vector<int> add);
+MatrixE createSmallerM(vector<double>, vector<int>, vector<int>, vector<vector<int>>);
 
 Vector3i get_vector(int, int);
 vector<int> vec_flip(vector<int>);
 void move_inside_BZ(Vector3i&);
 int get_third(int, int, int);
+
+Total irrep();

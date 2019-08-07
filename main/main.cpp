@@ -16,16 +16,25 @@ using namespace std;
 //declare variables
 
 int main(int argc, char const* argv[]) {
+
+	Total total = irrep();
+	IRREP irrep = total.irrep;
+	vector<Vector4i> triplets = total.triplets;
+
 	//calculate the add matrix
 	vector<int> matrixAdd;
+	vector<int> matrixSub;
 	std::cout << "runs" << std::endl;
 
 	for (int i = 0; i < size_add; i++) {
-		matrixAdd.push_back(add(i % kpoints, i / kpoints, size_q));
+		matrixSub.push_back(subtractIndex(i % kpoints, i / kpoints));
 	}
-	vector<double> phonon, A(size_A), B(size_A), mg_alpha, mg_beta;
+	for (int i = 0; i < size_add; i++) {
+		matrixAdd.push_back(addIndex(i % kpoints, i / kpoints));
+	}
+	vector<double> phonon(size_ph), mg_alpha(qpoints), mg_beta(qpoints);
 
-	//readfiles w_ph,w_mgBeta, w_mgAlpha, F1, F2, theta
+	//readfiles w_ph,w_mg_beta, w_mg_alpha, F2[k,q+k], F2[k,q+k], theta[k,k']
 
 	//w_ph
 	vector<double> w_ph;
@@ -39,12 +48,15 @@ int main(int argc, char const* argv[]) {
 	vector<double> w_mg_beta;
 	readFiles(w_mg_beta, "magnon.txt");
 
-	//F1,F2
+	//F2[k,q] "F2one",F2[k,q+k] "F2two"
 	/*vector<double> F1;
 	readFiles(F1, "F1four.txt");*/
 
-	vector<double> F2;
-	readFiles(F2, "F2four.txt");
+	vector<double> F2one;
+	readFiles(F2one, "F2four.txt");
+
+	vector<double> F2two;
+	readFiles(F2two, "F2four.txt");
 
 	std::cout << w_mg_alpha.size() << std::endl;
 	std::cout << phonon.size() << std::endl;
@@ -59,31 +71,93 @@ int main(int argc, char const* argv[]) {
 	}
 	std::cout << "runs1" << std::endl;
 
-	//calculate A,B
-	for (int i = 0; i < size_ph; i++) {
-		for (int j = 0; j < qpoints; j++) {
-			int temp = j * size_ph + i;
-			int temp_i = i % kpoints;
+	//calculate A,B,C,D,E,F
+	vector<double> ph1, ph2, ph3, ph4, mga1, mga2, mgb1, mgb2;
+	vector<int> phIndex, mgIndex;
+	for (auto&& k:irrep.IRREP) 
+	{
+		for(size_t b=0;b<branches;b++)
+		{ 
+			for (int j = 0; j < qpoints; j++) 
+			{
+				int i = kpoints * b + k;
+				int temp = j * size_ph + i;
 
-			double E3 = w_ph[i] - w_mg_alpha[j] + w_mg_alpha[matrixAdd[j + temp_i * kpoints]];
-			double E4 = w_ph[i] + w_mg_alpha[j] - w_mg_alpha[matrixAdd[j + temp_i * kpoints]];
-			double E5 = w_ph[i] - w_mg_beta[j] + w_mg_beta[matrixAdd[j + temp_i * kpoints]];
-			double E6 = w_ph[i] + w_mg_beta[j] - w_mg_beta[matrixAdd[j + temp_i * kpoints]];
-			A[temp] = 4.0 * M_PI * 1000.0 / 1.054 * F2[temp] * (dirac(E3));//This factor changes if you change params above
-			B[temp] = 4.0 * M_PI * 1000.0 / 1.054 * F2[temp] * (dirac(E5));//This factor changes if you change params above
+				double E1 = w_ph[i] - w_mg_alpha[j] + w_mg_alpha[matrixSub[j + k * kpoints]];
+				double E2 = w_ph[i] + w_mg_alpha[j] - w_mg_alpha[matrixAdd[j + k * kpoints]];
+				double E3 = w_ph[i] - w_mg_beta[j] + w_mg_beta[matrixSub[j + k * kpoints]];
+				double E4 = w_ph[i] + w_mg_beta[j] - w_mg_beta[matrixAdd[j + k * kpoints]];
+				ph1.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E1));//This factor changes if you change params above
+				ph2.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2two[temp] * dirac(E2));//This factor changes if you change params above
+				ph3.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E3));//This factor changes if you change params above
+				ph4.push_back (2.0 * M_PI * 1000.0 / 1.054 * F2two[temp] * dirac(E4));//This factor changes if you change params above
+				phIndex.push_back(i);
+			}
 		}
 	}
+
+	for (auto&& q : irrep.IRREP)
+	{
+		for (size_t i = 0; i < size_ph; i++)
+		{
+			int k = i % kpoints;
+			int temp = size_ph * q + i;
+
+			double E1 = w_ph[i] - w_mg_alpha[q] + w_mg_alpha[matrixSub[q + k * kpoints]];
+			double E2 = w_ph[i] + w_mg_alpha[q] - w_mg_alpha[matrixSub[q + k * kpoints]];
+			double E3 = w_ph[i] - w_mg_beta[q] + w_mg_beta[matrixSub[q + k * kpoints]];
+			double E4 = w_ph[i] + w_mg_beta[q] - w_mg_beta[matrixSub[q + k * kpoints]];
+
+			mga1.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E1));
+			mga2.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E2));
+			mgb1.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E3));
+			mgb2.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E4));
+			mgIndex.push_back(i + q * size_ph);
+
+		}
+	}
+
+	MatrixE A, B, C, D, Aa, Ba, Ab, Bb;
+	A = createSmallerM(ph1, phIndex, matrixSub,irrep.RED);
+	B = createSmallerM(ph2, phIndex, matrixAdd, irrep.RED);
+	C = createSmallerM(ph3, phIndex, matrixSub, irrep.RED);
+	D = createSmallerM(ph4, phIndex, matrixAdd, irrep.RED);
+	Aa = createSmallerM(mga1, mgIndex, matrixSub, irrep.RED);
+	Ba = createSmallerM(mga2, mgIndex, matrixSub, irrep.RED);
+	Ab = createSmallerM(mgb1, mgIndex, matrixSub, irrep.RED);
+	Bb = createSmallerM(mgb2, mgIndex, matrixSub, irrep.RED);
+
+	const MatrixPH MPH = { A, B, C, D };
+	const MatrixMG MGA = { Aa,Ba };
+	const MatrixMG MGB = { Ab,Bb };
+	
+
 
 	// Calculate initial distributions;
 
 	double T = 300.0;
 
-	for (int i = 0; i < size_ph; i++) {
-		if (i % 64 == 0) {
-			phonon.push_back(0);
+	for (auto&& i : irrep.IRREP)
+	{
+		for (size_t b = 0; b < branches; b++)
+		{
+			phonon[i + b * kpoints] = (1 / (exp(w_ph[i + b * kpoints] / k_B / T) - 1));
 		}
-		else {
-			phonon.push_back(1 / (exp(w_ph[i] / k_B / T) - 1));
+	}
+	for (size_t b = 0; b < branches; b++) 
+	{
+		phonon[b * kpoints] = 0;
+	}
+
+#pragma omp parallel for
+	for (auto&& i : irrep.IRREP)
+	{
+		for (size_t b = 0; b < branches; b++)
+		{
+			for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]])
+			{
+				phonon[ind + b * kpoints] = phonon[i + b * irrep.C];
+			}
 		}
 	}
 	T = 301.0;
@@ -96,16 +170,22 @@ int main(int argc, char const* argv[]) {
 		phonon[i*64+17]+=10;
 	}*/
 
-	for (int j = 0; j < qpoints; j++) {
-		mg_alpha.push_back(1 / (exp(w_mg_alpha[j] / k_B / T) - 1));
-		mg_beta.push_back(1 / (exp(w_mg_beta[j] / k_B / T) - 1));
-		if (j == 0) {
-			mg_beta[j] = 0;
-		}
-		if (mg_alpha[j] >= 1) {
-			mg_alpha[j] = 0;
+	for (auto&& q:irrep.IRREP) {
+		mg_alpha[q]=(1 / (exp(w_mg_alpha[q] / k_B / T) - 1));
+		mg_beta[q] = (1 / (exp(w_mg_beta[q] / k_B / T) - 1));
+	}
+	mg_alpha[0] = 0;
+	mg_beta[0] = 0;
+
+	for (auto&& i : irrep.IRREP)
+	{
+		for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]])
+		{
+			mg_alpha[ind] = mg_alpha[i];
+			mg_beta[ind] = mg_beta[i];
 		}
 	}
+
 
 	std::cout << "Runs this far" << std::endl;
 
@@ -142,7 +222,7 @@ int main(int argc, char const* argv[]) {
 				mg_alphaTot += mg_alpha[j];
 				mg_betaTot += mg_beta[j];
 		}
-		RKfour(phonon, mg_alpha, mg_beta, matrixAdd, A, B, h);
+		RKfour(phonon, mg_alpha, mg_beta, MPH, irrep, phTWO, MGA, MGB, h);
 	}
 	//myfile.close();
 	myfileOne.close();
