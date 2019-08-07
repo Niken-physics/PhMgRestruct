@@ -58,6 +58,9 @@ int main(int argc, char const* argv[]) {
 	vector<double> F2two;
 	readFiles(F2two, "F2four.txt");
 
+	vector<double> theta;
+	readFiles(theta, "Theta.txt");
+
 	std::cout << w_mg_alpha.size() << std::endl;
 	std::cout << phonon.size() << std::endl;
 
@@ -130,6 +133,54 @@ int main(int argc, char const* argv[]) {
 	const MatrixPH MPH = { A, B, C, D };
 	const MatrixMG MGA = { Aa,Ba };
 	const MatrixMG MGB = { Ab,Bb };
+
+	int sizeTRIP = triplets.size();
+
+	nzTRIP One;
+	nzTRIP Two;
+	for(auto&& i:triplets)
+	{
+		auto count = &i - &triplets[0];
+		for (size_t b = 0; b < branches; b++)
+		{
+			for (size_t b1 = 0; b1 < branches; b1++)
+			{
+				int kPPOne = mEnergy(i[0] * b, i[1] * b1, i[2], true, w_ph);
+				int kPPTwo = mEnergy(i[0] * b, i[1] * b1, i[2], false, w_ph);
+				double E1 = 1;
+				double E2 = 2;
+				double one = theta[count + sizeTRIP * b + sizeTRIP * branches * b1] * dirac(E1);
+				double two = theta[count + sizeTRIP * b + sizeTRIP * branches * b1] * dirac(E2);
+
+				if (IsZero(i[0], irrep.RED)) {
+					continue;
+				}
+				if (IsZero(i[1], irrep.RED)) {
+					continue;
+				}
+				if (IsZero(kPPOne, irrep.RED)==0) {
+					if (one > compare) {
+						One.theta.push_back(one);
+						Vector4i v;
+						v << i[0] + b*kpoints, i[1] + b1*kpoints, kPPOne, i[3];
+						One.index.push_back(v);
+					}
+				}
+
+				if (IsZero(kPPOne, irrep.RED)==0) {
+					if (two > compare) {
+						Two.theta.push_back(one);
+						Vector4i v;
+						v << i[0] + b*kpoints, i[1] + b1*kpoints, kPPTwo, i[3];
+						Two.index.push_back(v);
+					}
+				}
+
+			}
+		}
+	}
+
+	const PHtwo phTWO = { One,Two };
 	
 
 
@@ -201,7 +252,8 @@ int main(int argc, char const* argv[]) {
 	int time_max = 11;
 	double h = 1.0;
 
-	for (int t = 0; t < time_max; t++) {
+	for (int t = 0; t < time_max; t++) 
+	{
 		double E_ph = 0;
 		double E_mg_alpha = 0;
 		double E_mg_beta = 0;
@@ -210,7 +262,8 @@ int main(int argc, char const* argv[]) {
 		double mg_betaTot = 0;
 		for (auto&& i:irrep.IRREP)
 		{
-			for(size_t b=0; b<branches; b++){
+			for(size_t b=0; b<branches; b++)
+			{
 				E_ph += phonon[i+kpoints*b] * w_ph[i+kpoints*b];
 				phTot += phonon[i+kpoints*b];
 			}
@@ -224,6 +277,8 @@ int main(int argc, char const* argv[]) {
 		}
 		RKfour(phonon, mg_alpha, mg_beta, MPH, irrep, phTWO, MGA, MGB, h);
 	}
+
+
 	//myfile.close();
 	myfileOne.close();
 	//myfileTwo.close();

@@ -52,7 +52,7 @@ struct State {
 };
 struct nzTRIP {
 	vector<double> theta;
-	vector<Vector4i> triplets;
+	vector<Vector4i> index;
 };
 struct PHtwo {
 	nzTRIP One;

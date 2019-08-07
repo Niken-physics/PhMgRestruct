@@ -43,3 +43,7 @@ void move_inside_BZ(Vector3i&);
 int get_third(int, int, int);
 
 Total irrep();
+
+int mEnergy(int, int, int, bool, vector<double>);
+
+bool IsZero(int, vector<vector<int>>);

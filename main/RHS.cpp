@@ -61,16 +61,21 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 		RHS[i] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - phonon[i] * mg_alpha[j]);
 	}
 
-	for (auto&& t : phTWO.One.triplets)
+	for (auto&& t : phTWO.One.index)
 	{
-		auto count = &t - &phTWO.One.triplets[0];
-		RHS[t[0] + irrep.C * t[3]] += phTWO.One.theta[count] * phonon[t[0]]; //nonsense but correct later
+		auto count = &t - &phTWO.One.index[0];
+		RHS[t[0]] += phTWO.One.theta[count] * phonon[t[0]]; //nonsense but correct later
 	}
 #pragma omp parallel for
-	for (auto&& t : phTWO.Two.triplets)
+	for (auto&& t : phTWO.Two.index)
 	{
-		auto count = &t - &phTWO.Two.triplets[0];
-		RHS[t[0] + irrep.C * t[3]] += phTWO.Two.theta[count] * phonon[t[0]]; //nonsense but correct later
+		auto count = &t - &phTWO.Two.index[0];
+		RHS[t[0]] += phTWO.Two.theta[count] * phonon[t[0]]; //nonsense but correct later
+	}
+
+	for (size_t b = 0; b < branches; b++)
+	{
+		phonon[b * kpoints] = 0;
 	}
 
 #pragma omp parallel for
@@ -98,7 +103,7 @@ for (auto&& element : tmp.m)
 	int i = tmp.kb[count];
 	int j = tmp.qqP[count] % qpoints;
 	int jPrim = tmp.qqP[count] / qpoints;
-	RHS[i] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
+	RHS[j] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
 }
 tmp = MGA.B;
 #pragma omp parallel for
@@ -108,25 +113,25 @@ for (auto&& element : tmp.m)
 	int i = tmp.kb[count];
 	int j = tmp.qqP[count] % qpoints;
 	int jPrim = tmp.qqP[count] / qpoints;
-	RHS[i] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
+	RHS[j] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
 }
+
+RHS[0] = 0;
+
 #pragma omp parallel for
 for (auto&& i : irrep.IRREP)
 {
-	for (size_t b = 0; b < branches; b++)
+	for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]])
 	{
-		for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]]) 
-		{
-			RHS[ind + b * kpoints] = RHS[i + b * irrep.C];
-		}
+		RHS[ind] = RHS[i];
 	}
 }
 	return RHS;
 }
 
+//fcn used to update in RK-4 for magnons beta
 
-
-vector<double> f_mg_alpha(vector<double>& phonon, vector<double>& mg_alpha, IRREP irrep, MatrixMG MGB) {
+vector<double> f_mg_beta(vector<double>& phonon, vector<double>& mg_alpha, IRREP irrep, MatrixMG MGB) {
 	vector<double> RHS(qpoints);
 	MatrixE tmp = MGB.A;
 #pragma omp parallel for
@@ -136,7 +141,7 @@ vector<double> f_mg_alpha(vector<double>& phonon, vector<double>& mg_alpha, IRRE
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
 		int jPrim = tmp.qqP[count] / qpoints;
-		RHS[i] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
+		RHS[j] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
 	}
 	tmp = MGB.B;
 #pragma omp parallel for
@@ -146,18 +151,16 @@ vector<double> f_mg_alpha(vector<double>& phonon, vector<double>& mg_alpha, IRRE
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
 		int jPrim = tmp.qqP[count] / qpoints;
-		RHS[i] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
+		RHS[j] += element * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
 	}
+	RHS[0] = 0;
 #pragma omp parallel for
 	for (auto&& i : irrep.IRREP)
 	{
-		for (size_t b = 0; b < branches; b++)
+		for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]])
 		{
-			for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]]) {
-				RHS[ind + b * irrep.C] = RHS[i + b * irrep.C];
-			}
+			RHS[ind] = RHS[i];
 		}
 	}
 	return RHS;
 }
-//fcn used to update in RK-4 for magnons beta

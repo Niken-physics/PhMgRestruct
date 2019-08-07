@@ -119,3 +119,30 @@ MatrixE createSmallerM(vector<double> scatter, vector<int> index, vector<int> op
 	}
 	return tmp;
 }
+int mEnergy(int a, int b, int c, bool fcn, vector<double> w_ph) {
+	if (fcn) {
+		int out = c;
+		double temp = abs(w_ph[a] - w_ph[b] - w_ph[c]);
+		for (int i = 1; i < branches; i++) {
+			if (abs(w_ph[a] - w_ph[b] - w_ph[c + i * kpoints]) < temp) {
+				int out = c + kpoints * i;
+				double temp = abs(w_ph[a] - w_ph[b] - w_ph[c + i * kpoints]);
+			}
+			return out;
+
+		}
+	}
+	else {
+		int out = c;
+		double temp = abs(w_ph[a] + w_ph[b] - w_ph[c]);
+		for (int i = 0; i < branches; i++) {
+			if (abs(w_ph[a] + w_ph[b] - w_ph[c + i * kpoints]) < temp) {
+				out = c + kpoints * i;
+				temp = abs(w_ph[a] + w_ph[b] - w_ph[c + i * kpoints]);
+			}
+			return out;
+		}
+
+	}
+
+}
