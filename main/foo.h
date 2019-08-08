@@ -1,4 +1,5 @@
 #pragma once
+#include "Header.h"
 #define _USE_MATH_DEFINES
 #include <fstream> 
 #include <cmath>
@@ -8,8 +9,6 @@
 #include <array>
 #include <iomanip>
 #include<algorithm>
-#include "Header.h"
-#include "foo.h"
 #include <Eigen/Dense>
 
 using namespace std;
@@ -42,7 +41,7 @@ vector<int> vec_flip(vector<int>);
 void move_inside_BZ(Vector3i&);
 int get_third(int, int, int);
 
-Total irrep();
+Total gen_total();
 
 int mEnergy(int, int, int, bool, vector<double>);
 

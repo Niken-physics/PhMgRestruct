@@ -1,5 +1,7 @@
 //spar längsta raden
 // stoppa när vi kommer till 0:a.
+#include "Header.h"
+#include "foo.h"
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <iterator>
@@ -9,15 +11,13 @@
 #include<algorithm>
 #include <fstream> 
 #include <cmath>
-#include "Header.h"
-#include "foo.h"
 
 using namespace std;
 //declare variables
 
 int main(int argc, char const* argv[]) {
 
-	Total total = irrep();
+	Total total = gen_total();
 	IRREP irrep = total.irrep;
 	vector<Vector4i> triplets = total.triplets;
 
@@ -77,7 +77,7 @@ int main(int argc, char const* argv[]) {
 	//calculate A,B,C,D,E,F
 	vector<double> ph1, ph2, ph3, ph4, mga1, mga2, mgb1, mgb2;
 	vector<int> phIndex, mgIndex;
-	for (auto&& k:irrep.IRREP) 
+	for (auto&& k:irrep.irrep) 
 	{
 		for(size_t b=0;b<branches;b++)
 		{ 
@@ -99,7 +99,7 @@ int main(int argc, char const* argv[]) {
 		}
 	}
 
-	for (auto&& q : irrep.IRREP)
+	for (auto&& q : irrep.irrep)
 	{
 		for (size_t i = 0; i < size_ph; i++)
 		{
@@ -188,7 +188,7 @@ int main(int argc, char const* argv[]) {
 
 	double T = 300.0;
 
-	for (auto&& i : irrep.IRREP)
+	for (auto&& i : irrep.irrep)
 	{
 		for (size_t b = 0; b < branches; b++)
 		{
@@ -201,11 +201,11 @@ int main(int argc, char const* argv[]) {
 	}
 
 #pragma omp parallel for
-	for (auto&& i : irrep.IRREP)
+	for (auto&& i : irrep.irrep)
 	{
 		for (size_t b = 0; b < branches; b++)
 		{
-			for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]])
+			for (auto&& ind : irrep.RED[&i - &irrep.irrep[0]])
 			{
 				phonon[ind + b * kpoints] = phonon[i + b * irrep.C];
 			}
@@ -221,16 +221,16 @@ int main(int argc, char const* argv[]) {
 		phonon[i*64+17]+=10;
 	}*/
 
-	for (auto&& q:irrep.IRREP) {
+	for (auto&& q:irrep.irrep) {
 		mg_alpha[q]=(1 / (exp(w_mg_alpha[q] / k_B / T) - 1));
 		mg_beta[q] = (1 / (exp(w_mg_beta[q] / k_B / T) - 1));
 	}
 	mg_alpha[0] = 0;
 	mg_beta[0] = 0;
 
-	for (auto&& i : irrep.IRREP)
+	for (auto&& i : irrep.irrep)
 	{
-		for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]])
+		for (auto&& ind : irrep.RED[&i - &irrep.irrep[0]])
 		{
 			mg_alpha[ind] = mg_alpha[i];
 			mg_beta[ind] = mg_beta[i];
@@ -260,7 +260,7 @@ int main(int argc, char const* argv[]) {
 		double phTot = 0;
 		double mg_alphaTot = 0;
 		double mg_betaTot = 0;
-		for (auto&& i:irrep.IRREP)
+		for (auto&& i:irrep.irrep)
 		{
 			for(size_t b=0; b<branches; b++)
 			{
@@ -268,7 +268,7 @@ int main(int argc, char const* argv[]) {
 				phTot += phonon[i+kpoints*b];
 			}
 		}
-		for (auto&& j:irrep.IRREP) 
+		for (auto&& j:irrep.irrep) 
 		{
 				E_mg_alpha += mg_alpha[j] * w_mg_alpha[j];
 				E_mg_beta += mg_beta[j] * w_mg_beta[j];

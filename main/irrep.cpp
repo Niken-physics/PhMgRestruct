@@ -1,3 +1,5 @@
+#include "Header.h"
+#include "foo.h"
 #define _USE_MATH_DEFINES
 #include<string>
 #include <fstream> 
@@ -9,14 +11,12 @@
 #include <iomanip>
 #include<algorithm>
 #include<Eigen/Dense>
-#include "foo.h"
-#include "Header.h"
 
 using namespace std;
 using namespace Eigen;
 
 
-Total irrep()
+Total gen_total()
 {
 	vector<int> inside;
 	for (size_t i = 0; i != qpoints; ++i)
@@ -163,15 +163,9 @@ Total irrep()
 	auto i = &d - &degen[0];
 	trip.push_back({ store_trips[i][0], store_trips[i][1],store_trips[i][2],d });
 }
-	Total total;
-	IRREP IRREP;
-	total.triplets = trip;
 	int C = irrep.size();
-	IRREP.C = C;
-	IRREP.IRREP = irrep;
-	IRREP.RED = RED;
-	total.irrep = IRREP;
-
+	IRREP tmpIrrep{C,irrep,RED};
+	Total total{ tmpIrrep,trip };
 
 	return total;
 }

@@ -1,4 +1,18 @@
 #pragma once
+#define _USE_MATH_DEFINES
+#include <fstream> 
+#include <cmath>
+#include <iostream>
+#include <iterator>
+#include <vector>
+#include <array>
+#include <iomanip>
+#include<algorithm>
+#include <Eigen/Dense>
+
+using namespace std;
+using namespace Eigen;
+
 constexpr double k_B = 1.38064852 * 1e-23; 
 constexpr double bohrM = 9.274009 * 1e-24;//J/T
 constexpr double g = 2.0;
@@ -38,7 +52,7 @@ struct MatrixMG {
 };
 struct IRREP {
 	int C;
-	vector<int> IRREP;
+	vector<int> irrep;
 	vector<vector<int>> RED;
 };
 struct TRIP {

@@ -1,3 +1,5 @@
+#include "Header.h"
+#include "foo.h"
 #define _USE_MATH_DEFINES
 #include<string>
 #include <fstream> 
@@ -9,8 +11,6 @@
 #include <iomanip>
 #include<algorithm>
 #include<Eigen/Dense>
-#include "foo.h"
-#include "Header.h"
 
 using namespace std;
 using namespace Eigen;
@@ -128,9 +128,8 @@ int mEnergy(int a, int b, int c, bool fcn, vector<double> w_ph) {
 				int out = c + kpoints * i;
 				double temp = abs(w_ph[a] - w_ph[b] - w_ph[c + i * kpoints]);
 			}
-			return out;
-
 		}
+		return out;
 	}
 	else {
 		int out = c;
@@ -140,9 +139,8 @@ int mEnergy(int a, int b, int c, bool fcn, vector<double> w_ph) {
 				out = c + kpoints * i;
 				temp = abs(w_ph[a] + w_ph[b] - w_ph[c + i * kpoints]);
 			}
-			return out;
 		}
-
+		return out;
 	}
 
 }

@@ -1,3 +1,5 @@
+#include "Header.h"
+#include "foo.h"
 #define _USE_MATH_DEFINES
 #include <fstream> 
 #include <cmath>
@@ -8,8 +10,6 @@
 #include <iomanip>
 #include<algorithm>
 #include <Eigen/Dense>
-#include "Header.h"
-#include "foo.h"
 using namespace Eigen;
 using namespace std;
 
@@ -79,12 +79,12 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 	}
 
 #pragma omp parallel for
-	for (auto&& i : irrep.IRREP)
+	for (auto&& i : irrep.irrep)
 	{
 		for (size_t b = 0; b < branches; b++)
 		{
-			for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]]) {
-				RHS[ind + b * irrep.C] == RHS[i + b * irrep.C];
+			for (auto&& ind : irrep.RED[&i - &irrep.irrep[0]]) {
+				RHS[ind + b * irrep.C] = RHS[i + b * irrep.C];
 			}
 		}
 	}
@@ -119,9 +119,9 @@ for (auto&& element : tmp.m)
 RHS[0] = 0;
 
 #pragma omp parallel for
-for (auto&& i : irrep.IRREP)
+for (auto&& i : irrep.irrep)
 {
-	for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]])
+	for (auto&& ind : irrep.RED[&i - &irrep.irrep[0]])
 	{
 		RHS[ind] = RHS[i];
 	}
@@ -155,9 +155,9 @@ vector<double> f_mg_beta(vector<double>& phonon, vector<double>& mg_alpha, IRREP
 	}
 	RHS[0] = 0;
 #pragma omp parallel for
-	for (auto&& i : irrep.IRREP)
+	for (auto&& i : irrep.irrep)
 	{
-		for (auto&& ind : irrep.RED[&i - &irrep.IRREP[0]])
+		for (auto&& ind : irrep.RED[&i - &irrep.irrep[0]])
 		{
 			RHS[ind] = RHS[i];
 		}
