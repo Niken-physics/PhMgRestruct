@@ -3,10 +3,9 @@
 
 void RKfour(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg_beta,
 	        MatrixPH MPH, IRREP irrep, PHtwo phTWO, MatrixMG MGA, MatrixMG MGB,double h) {
-
+	std::cout << "HELLO FROM RK4, I AM WORKING HARD TODAY :)" << std::endl;
 	//create vectors to keep track of input into next step
 	vector<double> dyn1, dyn2, dyn3;
-
 	vector<double> k1ph = f_ph(phonon, mg_alpha, mg_beta, MPH, irrep, phTWO);
 	vector<double> k1mg_a = f_mg_alpha(phonon, mg_alpha, irrep, MGA);
 	vector<double> k1mg_b = f_mg_beta(phonon, mg_beta, irrep, MGB);

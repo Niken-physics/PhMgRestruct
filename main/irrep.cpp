@@ -86,7 +86,7 @@ Total gen_total()
 			}
 		}
 	}
-	cout << "runs here" << endl;
+	//cout << "runs here" << endl;
 
 	for (size_t i = 0; i < irrep.size(); i++)
 	{
@@ -166,6 +166,8 @@ Total gen_total()
 	int C = irrep.size();
 	IRREP tmpIrrep{C,irrep,RED};
 	Total total{ tmpIrrep,trip };
+
+	cout << "IRREP DONE" << endl;
 
 	return total;
 }

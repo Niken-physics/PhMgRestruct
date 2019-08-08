@@ -17,6 +17,7 @@ using namespace std;
 
 int main(int argc, char const* argv[]) {
 
+	std::cout << "The program runs" << std::endl;
 	Total total = gen_total();
 	IRREP irrep = total.irrep;
 	vector<Vector4i> triplets = total.triplets;
@@ -24,7 +25,7 @@ int main(int argc, char const* argv[]) {
 	//calculate the add matrix
 	vector<int> matrixAdd;
 	vector<int> matrixSub;
-	std::cout << "runs" << std::endl;
+	
 
 	for (int i = 0; i < size_add; i++) {
 		matrixSub.push_back(subtractIndex(i % kpoints, i / kpoints));
@@ -59,20 +60,23 @@ int main(int argc, char const* argv[]) {
 	readFiles(F2two, "F2four.txt");
 
 	vector<double> theta;
-	readFiles(theta, "Theta.txt");
+	//readFiles(theta, "Theta.txt");
+	for (size_t i = 0; i < (branches * branches * triplets.size()); i++)
+	{
+		theta.push_back(0.0001);
 
-	std::cout << w_mg_alpha.size() << std::endl;
-	std::cout << phonon.size() << std::endl;
+	}
+
+
+	//std::cout << w_mg_alpha.size() << std::endl;
+	//std::cout << phonon.size() << std::endl;
 
 
 	// Get correct energies for w_mg_alpha and w_mg_beta
 	for (int j = 0; j < qpoints; j++) {
 		w_mg_alpha[j] += M;
 		w_mg_beta[j] -= M;
-		/*std::cout << w_mg_alpha[j] << std::endl;
-		std::cout << w_mg_beta[j] << std::endl;*/
 	}
-	std::cout << "runs1" << std::endl;
 
 	//calculate A,B,C,D,E,F
 	vector<double> ph1, ph2, ph3, ph4, mga1, mga2, mgb1, mgb2;
@@ -120,6 +124,7 @@ int main(int argc, char const* argv[]) {
 		}
 	}
 
+
 	MatrixE A, B, C, D, Aa, Ba, Ab, Bb;
 	A = createSmallerM(ph1, phIndex, matrixSub,irrep.RED);
 	B = createSmallerM(ph2, phIndex, matrixAdd, irrep.RED);
@@ -135,11 +140,13 @@ int main(int argc, char const* argv[]) {
 	const MatrixMG MGB = { Ab,Bb };
 
 	int sizeTRIP = triplets.size();
+	
 
 	nzTRIP One;
 	nzTRIP Two;
 	for(auto&& i:triplets)
 	{
+
 		auto count = &i - &triplets[0];
 		for (size_t b = 0; b < branches; b++)
 		{
@@ -181,8 +188,6 @@ int main(int argc, char const* argv[]) {
 	}
 
 	const PHtwo phTWO = { One,Two };
-	
-
 
 	// Calculate initial distributions;
 
@@ -275,6 +280,16 @@ int main(int argc, char const* argv[]) {
 				mg_alphaTot += mg_alpha[j];
 				mg_betaTot += mg_beta[j];
 		}
+		if (myfileOne.is_open()) {
+			myfileOne << std::setprecision(10) << E_ph << "    " << E_mg_alpha << "   " << E_mg_beta
+				<< '\n';
+		}
+		if (myfileThree.is_open()) {
+			myfileThree << std::setprecision(10) << phTot << "    " << mg_alphaTot << "   " << mg_betaTot
+				<< '\n';
+		}
+		std::cout << t << std::endl;
+
 		RKfour(phonon, mg_alpha, mg_beta, MPH, irrep, phTWO, MGA, MGB, h);
 	}
 
@@ -283,6 +298,6 @@ int main(int argc, char const* argv[]) {
 	myfileOne.close();
 	//myfileTwo.close();
 	myfileThree.close();
-	cout << "Done" << endl;
+	std::cout << "Done" << std::endl;
 	return 0;
 }
