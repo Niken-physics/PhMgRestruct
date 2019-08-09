@@ -2,6 +2,7 @@
 // stoppa när vi kommer till 0:a.
 #include "Header.h"
 #include "foo.h"
+#include <omp.h>
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <iterator>
@@ -94,10 +95,10 @@ int main(int argc, char const* argv[]) {
 				double E2 = w_ph[i] + w_mg_alpha[j] - w_mg_alpha[matrixAdd[j + k * kpoints]];
 				double E3 = w_ph[i] - w_mg_beta[j] + w_mg_beta[matrixSub[j + k * kpoints]];
 				double E4 = w_ph[i] + w_mg_beta[j] - w_mg_beta[matrixAdd[j + k * kpoints]];
-				ph1.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E1));//This factor changes if you change params above
-				ph2.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2two[temp] * dirac(E2));//This factor changes if you change params above
-				ph3.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E3));//This factor changes if you change params above
-				ph4.push_back (2.0 * M_PI * 1000.0 / 1.054 * F2two[temp] * dirac(E4));//This factor changes if you change params above
+				ph1.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E1));
+				ph2.push_back(2.0 * M_PI * preFactor * F2two[temp] * dirac(E2));
+				ph3.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E3));
+				ph4.push_back (2.0 * M_PI * preFactor * F2two[temp] * dirac(E4));
 				phIndex.push_back(i);
 			}
 		}
@@ -115,10 +116,10 @@ int main(int argc, char const* argv[]) {
 			double E3 = w_ph[i] - w_mg_beta[q] + w_mg_beta[matrixSub[q + k * kpoints]];
 			double E4 = w_ph[i] + w_mg_beta[q] - w_mg_beta[matrixSub[q + k * kpoints]];
 
-			mga1.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E1));
-			mga2.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E2));
-			mgb1.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E3));
-			mgb2.push_back(2.0 * M_PI * 1000.0 / 1.054 * F2one[temp] * dirac(E4));
+			mga1.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E1));
+			mga2.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E2));
+			mgb1.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E3));
+			mgb2.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E4));
 			mgIndex.push_back(i + q * size_ph);
 
 		}
@@ -205,7 +206,6 @@ int main(int argc, char const* argv[]) {
 		phonon[b * kpoints] = 0;
 	}
 
-#pragma omp parallel for
 	for (auto&& i : irrep.irrep)
 	{
 		for (size_t b = 0; b < branches; b++)
@@ -254,8 +254,9 @@ int main(int argc, char const* argv[]) {
 	ofstream myfileThree;
 	myfileThree.open("Conservation.txt");
 
-	int time_max = 11;
-	double h = 1.0;
+	int time_max = 11; //number of timesteps
+	constexpr double h = 1.0; //choose 1 for fs
+
 
 	for (int t = 0; t < time_max; t++) 
 	{
@@ -290,7 +291,7 @@ int main(int argc, char const* argv[]) {
 		}
 		std::cout << t << std::endl;
 
-		RKfour(phonon, mg_alpha, mg_beta, MPH, irrep, phTWO, MGA, MGB, h);
+		RKfour(phonon, mg_alpha, mg_beta, MPH, irrep, phTWO, MGA, MGB,h);
 	}
 
 

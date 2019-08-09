@@ -1,4 +1,5 @@
 #pragma once
+#include <omp.h>
 #define _USE_MATH_DEFINES
 #include <fstream> 
 #include <cmath>
@@ -31,6 +32,10 @@ constexpr int size_A = size_ph * qpoints;
 constexpr int size_add = kpoints * qpoints;
 
 constexpr double smear = 1e-22;
+
+constexpr double h_bar = 1.054571817 * 1e-34;
+constexpr double preFactor = (1 / h_bar) * (1 / smear) * 1e-15 * 1e-38;
+
 
 
 struct MatrixE {

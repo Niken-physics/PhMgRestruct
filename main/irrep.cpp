@@ -1,5 +1,6 @@
 #include "Header.h"
 #include "foo.h"
+#include <omp.h>
 #define _USE_MATH_DEFINES
 #include<string>
 #include <fstream> 

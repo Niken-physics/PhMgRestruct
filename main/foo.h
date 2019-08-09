@@ -1,5 +1,6 @@
 #pragma once
 #include "Header.h"
+#include <omp.h>
 #define _USE_MATH_DEFINES
 #include <fstream> 
 #include <cmath>
