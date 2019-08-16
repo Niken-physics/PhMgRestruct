@@ -2,19 +2,6 @@
 // stoppa när vi kommer till 0:a.
 #include "Header.h"
 #include "foo.h"
-#include <omp.h>
-#define _USE_MATH_DEFINES
-#include <iostream>
-#include <iterator>
-#include <vector>
-#include <array>
-#include <iomanip>
-#include<algorithm>
-#include <fstream> 
-#include <cmath>
-
-using namespace std;
-//declare variables
 
 int main(int argc, char const* argv[]) {
 
@@ -51,8 +38,8 @@ int main(int argc, char const* argv[]) {
 	readFiles(w_mg_beta, "magnon.txt");
 
 	//F2[k,q] "F2one",F2[k,q+k] "F2two"
-	/*vector<double> F1;
-	readFiles(F1, "F1four.txt");*/
+	vector<double> F1one;
+	readFiles(F1one, "F1four.txt");
 
 	vector<double> F2one;
 	readFiles(F2one, "F2four.txt");
@@ -80,7 +67,7 @@ int main(int argc, char const* argv[]) {
 	}
 
 	//calculate A,B,C,D,E,F
-	vector<double> ph1, ph2, ph3, ph4, mga1, mga2, mgb1, mgb2;
+	vector<double> phF1, ph1, ph2, ph3, ph4, mgF1a, mgF1b, mga1, mga2, mgb1, mgb2;
 	vector<int> phIndex, mgIndex;
 	for (auto&& k:irrep.irrep) 
 	{
@@ -90,11 +77,12 @@ int main(int argc, char const* argv[]) {
 			{
 				int i = kpoints * b + k;
 				int temp = j * size_ph + i;
-
+				double F1 = w_ph[i] - w_mg_alpha[j] - w_mg_beta[matrixSub[k + j * kpoints]];
 				double E1 = w_ph[i] - w_mg_alpha[j] + w_mg_alpha[matrixSub[j + k * kpoints]];
 				double E2 = w_ph[i] + w_mg_alpha[j] - w_mg_alpha[matrixAdd[j + k * kpoints]];
 				double E3 = w_ph[i] - w_mg_beta[j] + w_mg_beta[matrixSub[j + k * kpoints]];
 				double E4 = w_ph[i] + w_mg_beta[j] - w_mg_beta[matrixAdd[j + k * kpoints]];
+				phF1.push_back(4 * M_PI * preFactor * F1one[temp] * dirac(E1));
 				ph1.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E1));
 				ph2.push_back(2.0 * M_PI * preFactor * F2two[temp] * dirac(E2));
 				ph3.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E3));
@@ -110,12 +98,15 @@ int main(int argc, char const* argv[]) {
 		{
 			int k = i % kpoints;
 			int temp = size_ph * q + i;
-
+			double F1a = w_ph[i] - w_mg_alpha[q] - w_mg_beta[matrixSub[q + k * kpoints]];
+			double F1b = w_ph[i] - w_mg_beta[q] - w_mg_alpha[matrixSub[q + k * kpoints]];
 			double E1 = w_ph[i] - w_mg_alpha[q] + w_mg_alpha[matrixSub[q + k * kpoints]];
 			double E2 = w_ph[i] + w_mg_alpha[q] - w_mg_alpha[matrixSub[q + k * kpoints]];
 			double E3 = w_ph[i] - w_mg_beta[q] + w_mg_beta[matrixSub[q + k * kpoints]];
 			double E4 = w_ph[i] + w_mg_beta[q] - w_mg_beta[matrixSub[q + k * kpoints]];
 
+			mgF1a.push_back(4.0 * M_PI * preFactor * F1one[temp] * dirac(F1a));
+			mgF1b.push_back(4.0 * M_PI * preFactor * F1one[temp] * dirac(F1b));
 			mga1.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E1));
 			mga2.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E2));
 			mgb1.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E3));
@@ -126,25 +117,29 @@ int main(int argc, char const* argv[]) {
 	}
 
 
-	MatrixE A, B, C, D, Aa, Ba, Ab, Bb;
-	A = createSmallerM(ph1, phIndex, matrixSub,irrep.RED);
-	B = createSmallerM(ph2, phIndex, matrixAdd, irrep.RED);
-	C = createSmallerM(ph3, phIndex, matrixSub, irrep.RED);
-	D = createSmallerM(ph4, phIndex, matrixAdd, irrep.RED);
-	Aa = createSmallerM(mga1, mgIndex, matrixSub, irrep.RED);
-	Ba = createSmallerM(mga2, mgIndex, matrixSub, irrep.RED);
-	Ab = createSmallerM(mgb1, mgIndex, matrixSub, irrep.RED);
-	Bb = createSmallerM(mgb2, mgIndex, matrixSub, irrep.RED);
+	MatrixE F1nz,A, B, C, D, F1anz,F1bnz, Aa, Ba, Ab, Bb;
+	F1nz = createSmallerM_Fone(phF1, phIndex, matrixSub, irrep.RED);
+	A = createSmallerM_Ftwo(ph1, phIndex, matrixSub,irrep.RED);
+	B = createSmallerM_Ftwo(ph2, phIndex, matrixAdd, irrep.RED);
+	C = createSmallerM_Ftwo(ph3, phIndex, matrixSub, irrep.RED);
+	D = createSmallerM_Ftwo(ph4, phIndex, matrixAdd, irrep.RED);
+	F1anz = createSmallerM_Fone(mgF1a, mgIndex, matrixSub, irrep.RED);
+	Aa = createSmallerM_Ftwo(mga1, mgIndex, matrixSub, irrep.RED);
+	Ba = createSmallerM_Fthree(mga2, mgIndex, matrixSub, irrep.RED);
+	F1bnz = createSmallerM_Fone(mgF1b, mgIndex, matrixSub, irrep.RED);
+	Ab = createSmallerM_Ftwo(mgb1, mgIndex, matrixSub, irrep.RED);
+	Bb = createSmallerM_Fthree(mgb2, mgIndex, matrixSub, irrep.RED);
 
-	const MatrixPH MPH = { A, B, C, D };
-	const MatrixMG MGA = { Aa,Ba };
-	const MatrixMG MGB = { Ab,Bb };
+	const MatrixPH MPH = { F1nz, A, B, C, D };
+	const MatrixMG MGA = {F1anz, Aa,Ba };
+	const MatrixMG MGB = {F1anz, Ab,Bb };
 
 	int sizeTRIP = triplets.size();
 	
 
 	nzTRIP One;
 	nzTRIP Two;
+	nzTRIP Three;
 	for(auto&& i:triplets)
 	{
 
@@ -153,20 +148,20 @@ int main(int argc, char const* argv[]) {
 		{
 			for (size_t b1 = 0; b1 < branches; b1++)
 			{
-				int kPPOne = mEnergy(i[0] * b, i[1] * b1, i[2], true, w_ph);
-				int kPPTwo = mEnergy(i[0] * b, i[1] * b1, i[2], false, w_ph);
-				double E1 = 1;
-				double E2 = 2;
-				double one = theta[count + sizeTRIP * b + sizeTRIP * branches * b1] * dirac(E1);
-				double two = theta[count + sizeTRIP * b + sizeTRIP * branches * b1] * dirac(E2);
-
 				if (IsZero(i[0], irrep.RED)) {
 					continue;
 				}
 				if (IsZero(i[1], irrep.RED)) {
 					continue;
 				}
+				int kPPOne = mEnergyOne(i[0] + b*kpoints, i[1] + b1*kpoints, i[2], w_ph);
+				int kPPTwo = mEnergyTwo(i[0] + b*kpoints, i[1] + b1*kpoints, i[2], w_ph);
+				int kPPThree = mEnergyThree(i[0] + b*kpoints, i[1] + b1*kpoints, i[2], w_ph);
+
+				
 				if (IsZero(kPPOne, irrep.RED)==0) {
+					double E1 = w_ph[i[0] + b * kpoints] + w_ph[i[1] + b1 * kpoints] - w_ph[kPPOne];
+					double one = theta[count + sizeTRIP * b + sizeTRIP * branches * b1] * dirac(E1);
 					if (one > compare) {
 						One.theta.push_back(one);
 						Vector4i v;
@@ -175,12 +170,25 @@ int main(int argc, char const* argv[]) {
 					}
 				}
 
-				if (IsZero(kPPOne, irrep.RED)==0) {
+				if (IsZero(kPPTwo, irrep.RED)==0) {
+					double E2 = w_ph[i[0] + b * kpoints] - w_ph[i[1] + b1 * kpoints] + w_ph[kPPTwo];
+					double two = theta[count + sizeTRIP * b + sizeTRIP * branches * b1] * dirac(E2);
 					if (two > compare) {
-						Two.theta.push_back(one);
+						Two.theta.push_back(two);
 						Vector4i v;
 						v << i[0] + b*kpoints, i[1] + b1*kpoints, kPPTwo, i[3];
 						Two.index.push_back(v);
+					}
+				}
+
+				if (IsZero(kPPThree, irrep.RED) == 0) {
+					double E3 = w_ph[i[0] + b * kpoints] - w_ph[i[1] + b1 * kpoints] - w_ph[kPPThree];
+					double three = theta[count + sizeTRIP * b + sizeTRIP * branches * b1] * dirac(E3);
+					if (three > compare) {
+						Three.theta.push_back(three);
+						Vector4i v;
+						v << i[0] + b * kpoints, i[1] + b1 * kpoints, kPPThree, i[3];
+						Three.index.push_back(v);
 					}
 				}
 
@@ -188,7 +196,7 @@ int main(int argc, char const* argv[]) {
 		}
 	}
 
-	const PHtwo phTWO = { One,Two };
+	const PHtwo phTWO = { One,Two,Three };
 
 	// Calculate initial distributions;
 

@@ -1,7 +1,5 @@
 #include "foo.h"
 #include "Header.h"
-#include <omp.h>
-
 
 void RKfour(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg_beta,
 	        MatrixPH MPH, IRREP irrep, PHtwo phTWO, MatrixMG MGA, MatrixMG MGB,double h) {

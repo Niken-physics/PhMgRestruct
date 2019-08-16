@@ -1,17 +1,5 @@
 #include "Header.h"
 #include "foo.h"
-#include <omp.h>
-#define _USE_MATH_DEFINES
-#include<string>
-#include <fstream> 
-#include <cmath>
-#include <iostream>
-#include <iterator>
-#include <vector>
-#include <array>
-#include <iomanip>
-#include<algorithm>
-#include<Eigen/Dense>
 
 using namespace std;
 using namespace Eigen;
@@ -94,7 +82,7 @@ bool IsZero(int a, vector<vector<int>> irrep){
 	return true;
 }
 
-MatrixE createSmallerM(vector<double> scatter, vector<int> index, vector<int> operation,vector<vector<int>> RED)
+MatrixE createSmallerM_Ftwo(vector<double> scatter, vector<int> index, vector<int> operation,vector<vector<int>> RED)
 {
 	MatrixE tmp;
 	for (auto&& i : scatter)
@@ -120,28 +108,98 @@ MatrixE createSmallerM(vector<double> scatter, vector<int> index, vector<int> op
 	}
 	return tmp;
 }
-int mEnergy(int a, int b, int c, bool fcn, vector<double> w_ph) {
-	if (fcn) {
-		int out = c;
-		double temp = abs(w_ph[a] - w_ph[b] - w_ph[c]);
-		for (int i = 1; i < branches; i++) {
-			if (abs(w_ph[a] - w_ph[b] - w_ph[c + i * kpoints]) < temp) {
-				int out = c + kpoints * i;
-				double temp = abs(w_ph[a] - w_ph[b] - w_ph[c + i * kpoints]);
+MatrixE createSmallerM_Fone(vector<double> scatter, vector<int> index, vector<int> operation, vector<vector<int>> RED)
+{
+	MatrixE tmp;
+	for (auto&& i : scatter)
+	{
+		auto count = &i - &scatter[0];
+		if (abs(i) > compare) {
+			tmp.m.push_back(i);
+			tmp.kb.push_back(index[count] % size_ph);
+			int q = index[count] / size_ph;
+			if (IsZero(q, RED)) {
+				continue;
 			}
+			int k = index[count] % kpoints;
+			if (IsZero(k, RED)) {
+				continue;
+			}
+			int qP = operation[q + k * kpoints];
+			if (IsZero(qP, RED)) {
+				continue;
+			}
+			tmp.qqP.push_back(q + qP * qpoints);
 		}
-		return out;
 	}
-	else {
+	return tmp;
+}
+
+MatrixE createSmallerM_Fthree(vector<double> scatter, vector<int> index, vector<int> operation, vector<vector<int>> RED)
+{
+	MatrixE tmp;
+	for (auto&& i : scatter)
+	{
+		auto count = &i - &scatter[0];
+		if (abs(i) > compare) {
+			tmp.m.push_back(i);
+			int q = index[count] / size_ph;
+			if (IsZero(q, RED)) {
+				continue;
+			}
+			int k = index[count] % kpoints;
+			int b = index[count] / kpoints;
+			if (IsZero(k, RED)) {
+				continue;
+			}
+			Vector3i tmp_v = get_vector(k, size_q);
+			tmp_v = -1 * tmp_v;
+			move_inside_BZ(tmp_v);
+			int k = tmp_v[0] + tmp_v[1] * size_q + tmp_v[2] * size_q * size_q;
+			tmp.kb.push_back(k+kpoints*b);
+			int qP = operation[q + k * kpoints];
+			if (IsZero(qP, RED)) {
+				continue;
+			}
+			tmp.qqP.push_back(q + qP * qpoints);
+		}
+	}
+	return tmp;
+}
+
+
+int mEnergyOne(int a, int b, int c, vector<double> w_ph) {
 		int out = c;
 		double temp = abs(w_ph[a] + w_ph[b] - w_ph[c]);
-		for (int i = 0; i < branches; i++) {
+		for (int i = 1; i < branches; i++) {
 			if (abs(w_ph[a] + w_ph[b] - w_ph[c + i * kpoints]) < temp) {
-				out = c + kpoints * i;
-				temp = abs(w_ph[a] + w_ph[b] - w_ph[c + i * kpoints]);
+				int out = c + kpoints * i;
+				double temp = abs(w_ph[a] + w_ph[b] - w_ph[c + i * kpoints]);
 			}
 		}
 		return out;
 	}
 
+int mEnergyTwo(int a, int b, int c, vector<double> w_ph) {
+	int out = c;
+	double temp = abs(w_ph[a] - w_ph[b] + w_ph[c]);
+	for (int i = 0; i < branches; i++) {
+		if (abs(w_ph[a] - w_ph[b] + w_ph[c + i * kpoints]) < temp) {
+			out = c + kpoints * i;
+			temp = abs(w_ph[a] - w_ph[b] + w_ph[c + i * kpoints]);
+		}
+	}
+	return out;
+}
+
+int mEnergyThree(int a, int b, int c, vector<double> w_ph) {
+	int out = c;
+	double temp = abs(w_ph[a] - w_ph[b] - w_ph[c]);
+	for (int i = 0; i < branches; i++) {
+		if (abs(w_ph[a] - w_ph[b] - w_ph[c + i * kpoints]) < temp) {
+			out = c + kpoints * i;
+			temp = abs(w_ph[a] - w_ph[b] - w_ph[c + i * kpoints]);
+		}
+	}
+	return out;
 }

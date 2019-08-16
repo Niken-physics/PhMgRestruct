@@ -1,19 +1,5 @@
 #pragma once
 #include "Header.h"
-#include <omp.h>
-#define _USE_MATH_DEFINES
-#include <fstream> 
-#include <cmath>
-#include <iostream>
-#include <iterator>
-#include <vector>
-#include <array>
-#include <iomanip>
-#include<algorithm>
-#include <Eigen/Dense>
-
-using namespace std;
-using namespace Eigen;
 
 int subtractIndex(int, int);
 int addIndex(int, int);
@@ -35,7 +21,9 @@ void RKfour(vector<double>&, vector<double>&, vector<double>&,
 
 void readFiles(vector<double>&, string);
 
-MatrixE createSmallerM(vector<double>, vector<int>, vector<int>, vector<vector<int>>);
+MatrixE createSmallerM_Fone(vector<double>, vector<int>, vector<int>, vector<vector<int>>);
+MatrixE createSmallerM_Ftwo(vector<double>, vector<int>, vector<int>, vector<vector<int>>);
+MatrixE createSmallerM_Fthree(vector<double>, vector<int>, vector<int>, vector<vector<int>>);
 
 Vector3i get_vector(int, int);
 vector<int> vec_flip(vector<int>);
@@ -44,6 +32,12 @@ int get_third(int, int, int);
 
 Total gen_total();
 
-int mEnergy(int, int, int, bool, vector<double>);
+int mEnergyOne(int, int, int, vector<double>);
+
+int mEnergyTwo(int, int, int, vector<double>);
+
+int mEnergyThree(int, int, int, vector<double>);
 
 bool IsZero(int, vector<vector<int>>);
+
+

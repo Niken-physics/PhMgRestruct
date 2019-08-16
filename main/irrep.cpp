@@ -1,17 +1,5 @@
 #include "Header.h"
 #include "foo.h"
-#include <omp.h>
-#define _USE_MATH_DEFINES
-#include<string>
-#include <fstream> 
-#include <cmath>
-#include <iostream>
-#include <iterator>
-#include <vector>
-#include <array>
-#include <iomanip>
-#include<algorithm>
-#include<Eigen/Dense>
 
 using namespace std;
 using namespace Eigen;
@@ -61,7 +49,7 @@ Total gen_total()
 			RED.push_back({});
 			for (auto&& m : matrix)
 			{
-				auto j = &m - &matrix[0];
+				int j = &m - &matrix[0];
 
 				if (j == 0) {
 					index_vector.push_back(i);

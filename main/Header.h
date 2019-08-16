@@ -14,6 +14,9 @@
 using namespace std;
 using namespace Eigen;
 
+#pragma omp declare reduction(vec_double_plus : std::vector<double> : \
+                              std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<double>())) \
+                    initializer(omp_priv = omp_orig)
 constexpr double k_B = 1.38064852 * 1e-23; 
 constexpr double bohrM = 9.274009 * 1e-24;//J/T
 constexpr double g = 2.0;
@@ -45,6 +48,7 @@ struct MatrixE {
 };
 
 struct MatrixPH {
+	MatrixE F1nz;
 	MatrixE A;
 	MatrixE B;
 	MatrixE C;
@@ -52,6 +56,7 @@ struct MatrixPH {
 };
 
 struct MatrixMG {
+	MatrixE F1anz;
 	MatrixE A;
 	MatrixE B;
 };
@@ -76,7 +81,7 @@ struct nzTRIP {
 struct PHtwo {
 	nzTRIP One;
 	nzTRIP Two;
-
+	nzTRIP Three;
 };
 struct Total {
 	IRREP irrep;
