@@ -89,8 +89,6 @@ MatrixE createSmallerM_Ftwo(vector<double> scatter, vector<int> index, vector<in
 	{
 		auto count = &i - &scatter[0];
 		if (abs(i) > compare) {
-			tmp.m.push_back(i);
-			tmp.kb.push_back(index[count] % size_ph);
 			int q = index[count] / size_ph;
 			if (IsZero(q, RED)) {
 				continue;
@@ -103,6 +101,8 @@ MatrixE createSmallerM_Ftwo(vector<double> scatter, vector<int> index, vector<in
 			if (IsZero(qP, RED)) {
 				continue;
 			}
+			tmp.m.push_back(i);
+			tmp.kb.push_back(index[count] % size_ph);
 			tmp.qqP.push_back(q + qP * qpoints);
 		}
 	}
@@ -115,8 +115,7 @@ MatrixE createSmallerM_Fone(vector<double> scatter, vector<int> index, vector<in
 	{
 		auto count = &i - &scatter[0];
 		if (abs(i) > compare) {
-			tmp.m.push_back(i);
-			tmp.kb.push_back(index[count] % size_ph);
+	
 			int q = index[count] / size_ph;
 			if (IsZero(q, RED)) {
 				continue;
@@ -129,6 +128,8 @@ MatrixE createSmallerM_Fone(vector<double> scatter, vector<int> index, vector<in
 			if (IsZero(qP, RED)) {
 				continue;
 			}
+			tmp.m.push_back(i);
+			tmp.kb.push_back(index[count] % size_ph);
 			tmp.qqP.push_back(q + qP * qpoints);
 		}
 	}
@@ -142,7 +143,6 @@ MatrixE createSmallerM_Fthree(vector<double> scatter, vector<int> index, vector<
 	{
 		auto count = &i - &scatter[0];
 		if (abs(i) > compare) {
-			tmp.m.push_back(i);
 			int q = index[count] / size_ph;
 			if (IsZero(q, RED)) {
 				continue;
@@ -155,13 +155,14 @@ MatrixE createSmallerM_Fthree(vector<double> scatter, vector<int> index, vector<
 			Vector3i tmp_v = get_vector(k, size_q);
 			tmp_v = -1 * tmp_v;
 			move_inside_BZ(tmp_v);
-			int k = tmp_v[0] + tmp_v[1] * size_q + tmp_v[2] * size_q * size_q;
-			tmp.kb.push_back(k+kpoints*b);
+			k = tmp_v[0] + tmp_v[1] * size_q + tmp_v[2] * size_q * size_q;
 			int qP = operation[q + k * kpoints];
 			if (IsZero(qP, RED)) {
 				continue;
 			}
 			tmp.qqP.push_back(q + qP * qpoints);
+			tmp.m.push_back(i);
+			tmp.kb.push_back(k + kpoints * b);
 		}
 	}
 	return tmp;

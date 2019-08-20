@@ -1,5 +1,3 @@
-//spar längsta raden
-// stoppa när vi kommer till 0:a.
 #include "Header.h"
 #include "foo.h"
 
@@ -9,6 +7,11 @@ int main(int argc, char const* argv[]) {
 	Total total = gen_total();
 	IRREP irrep = total.irrep;
 	vector<Vector4i> triplets = total.triplets;
+	vector<int> degen;
+	for (size_t count = 0; count < irrep.C; count++)
+	{
+		degen.push_back(irrep.RED[count].size());
+	}
 
 	//calculate the add matrix
 	vector<int> matrixAdd;
@@ -39,7 +42,7 @@ int main(int argc, char const* argv[]) {
 
 	//F2[k,q] "F2one",F2[k,q+k] "F2two"
 	vector<double> F1one;
-	readFiles(F1one, "F1four.txt");
+	readFiles(F1one, "F2four.txt"); //OBS THIS MUST CHANGE LATER
 
 	vector<double> F2one;
 	readFiles(F2one, "F2four.txt");
@@ -94,7 +97,7 @@ int main(int argc, char const* argv[]) {
 
 	for (auto&& q : irrep.irrep)
 	{
-		for (size_t i = 0; i < size_ph; i++)
+		for (int i = 0; i < size_ph; i++)
 		{
 			int k = i % kpoints;
 			int temp = size_ph * q + i;
@@ -111,7 +114,7 @@ int main(int argc, char const* argv[]) {
 			mga2.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E2));
 			mgb1.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E3));
 			mgb2.push_back(2.0 * M_PI * preFactor * F2one[temp] * dirac(E4));
-			mgIndex.push_back(i + q * size_ph);
+			mgIndex.push_back(temp);
 
 		}
 	}
@@ -201,26 +204,29 @@ int main(int argc, char const* argv[]) {
 	// Calculate initial distributions;
 
 	double T = 300.0;
-
+#pragma omp parallel
+	{std::cout << omp_get_num_threads() << std::endl;
+	} //checking number of thread used
 	for (auto&& i : irrep.irrep)
 	{
-		for (size_t b = 0; b < branches; b++)
+		for (int b = 0; b < branches; b++)
 		{
 			phonon[i + b * kpoints] = (1 / (exp(w_ph[i + b * kpoints] / k_B / T) - 1));
 		}
 	}
-	for (size_t b = 0; b < branches; b++) 
+
+	for (int b = 0; b < branches; b++) 
 	{
 		phonon[b * kpoints] = 0;
 	}
 
 	for (auto&& i : irrep.irrep)
 	{
-		for (size_t b = 0; b < branches; b++)
+		for (int b = 0; b < branches; b++)
 		{
 			for (auto&& ind : irrep.RED[&i - &irrep.irrep[0]])
 			{
-				phonon[ind + b * kpoints] = phonon[i + b * irrep.C];
+				phonon[ind + b * kpoints] = phonon[i + b * kpoints];
 			}
 		}
 	}
@@ -265,7 +271,8 @@ int main(int argc, char const* argv[]) {
 	int time_max = 11; //number of timesteps
 	constexpr double h = 1.0; //choose 1 for fs
 
-
+	double START, END;
+	START = omp_get_wtime();
 	for (int t = 0; t < time_max; t++) 
 	{
 		double E_ph = 0;
@@ -274,20 +281,22 @@ int main(int argc, char const* argv[]) {
 		double phTot = 0;
 		double mg_alphaTot = 0;
 		double mg_betaTot = 0;
-		for (auto&& i:irrep.irrep)
+		for (int count = 0; count < irrep.C; count++) 
 		{
-			for(size_t b=0; b<branches; b++)
+			int i = irrep.irrep[count];
+			for(int b=0; b<branches; b++)
 			{
-				E_ph += phonon[i+kpoints*b] * w_ph[i+kpoints*b];
-				phTot += phonon[i+kpoints*b];
+				E_ph += phonon[i+kpoints*b] * w_ph[i+kpoints*b]*degen[count];
+				phTot += phonon[i+kpoints*b]*degen[count];
 			}
 		}
-		for (auto&& j:irrep.irrep) 
+		for (int count = 0; count < irrep.C; count++)
 		{
-				E_mg_alpha += mg_alpha[j] * w_mg_alpha[j];
-				E_mg_beta += mg_beta[j] * w_mg_beta[j];
-				mg_alphaTot += mg_alpha[j];
-				mg_betaTot += mg_beta[j];
+			int j = irrep.irrep[count];
+			E_mg_alpha += mg_alpha[j] * w_mg_alpha[j]*degen[count];
+			E_mg_beta += mg_beta[j] * w_mg_beta[j] * degen[count];
+			mg_alphaTot += mg_alpha[j] * degen[count];
+			mg_betaTot += mg_beta[j] * degen[count];
 		}
 		if (myfileOne.is_open()) {
 			myfileOne << std::setprecision(10) << E_ph << "    " << E_mg_alpha << "   " << E_mg_beta
@@ -297,10 +306,12 @@ int main(int argc, char const* argv[]) {
 			myfileThree << std::setprecision(10) << phTot << "    " << mg_alphaTot << "   " << mg_betaTot
 				<< '\n';
 		}
-		std::cout << t << std::endl;
+		//std::cout << t << std::endl;
 
 		RKfour(phonon, mg_alpha, mg_beta, MPH, irrep, phTWO, MGA, MGB,h);
 	}
+	END = omp_get_wtime();
+	std::cout << "Loop time (s):" << END-START <<  std::endl;
 
 
 	//myfile.close();

@@ -3,12 +3,12 @@
 
 void RKfour(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg_beta,
 	        MatrixPH MPH, IRREP irrep, PHtwo phTWO, MatrixMG MGA, MatrixMG MGB,double h) {
-	std::cout << "HELLO FROM RK4, I AM WORKING HARD TODAY :)" << std::endl;
+	//std::cout << "HELLO FROM RK4, I AM WORKING HARD TODAY :)" << std::endl;
 	//create vectors to keep track of input into next step
 	vector<double> dyn1, dyn2, dyn3;
 	vector<double> k1ph = f_ph(phonon, mg_alpha, mg_beta, MPH, irrep, phTWO);
-	vector<double> k1mg_a = f_mg_alpha(phonon, mg_alpha, irrep, MGA);
-	vector<double> k1mg_b = f_mg_beta(phonon, mg_beta, irrep, MGB);
+	vector<double> k1mg_a = f_mg_alpha(phonon, mg_alpha, mg_beta, irrep, MGA);
+	vector<double> k1mg_b = f_mg_beta(phonon,mg_alpha ,mg_beta, irrep, MGB);
 
 	for (int i = 0; i < size_ph; i++) {
 		dyn1.push_back(phonon[i] + (h / 2.0) * k1ph[i]);
@@ -19,8 +19,8 @@ void RKfour(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg
 	}
 
 	vector<double> k2ph = f_ph(dyn1, dyn2, dyn3, MPH, irrep, phTWO);
-	vector<double> k2mg_a = f_mg_alpha(dyn1, dyn2, irrep, MGA);
-	vector<double> k2mg_b = f_mg_beta(dyn1, dyn3, irrep, MGB);
+	vector<double> k2mg_a = f_mg_alpha(dyn1, dyn2,dyn3, irrep, MGA);
+	vector<double> k2mg_b = f_mg_beta(dyn1, dyn2, dyn3, irrep, MGB);
 
 	for (int i = 0; i < size_ph; i++) {
 		dyn1[i] = phonon[i] + h / 2.0 * k2ph[i];
@@ -31,8 +31,8 @@ void RKfour(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg
 	}
 
 	vector<double> k3ph = f_ph(dyn1, dyn2, dyn3, MPH, irrep, phTWO);
-	vector<double> k3mg_a = f_mg_alpha(dyn1, dyn2, irrep, MGA);
-	vector<double> k3mg_b = f_mg_beta(dyn1, dyn3, irrep, MGB);
+	vector<double> k3mg_a = f_mg_alpha(dyn1, dyn2, dyn3, irrep, MGA);
+	vector<double> k3mg_b = f_mg_beta(dyn1, dyn2, dyn3, irrep, MGB);
 
 	for (int i = 0; i < size_ph; i++) {
 		dyn1[i] = phonon[i] + h * k3ph[i];
@@ -43,8 +43,8 @@ void RKfour(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg
 	}
 
 	vector<double> k4ph = f_ph(dyn1, dyn2, dyn3, MPH, irrep, phTWO);
-	vector<double> k4mg_a = f_mg_alpha(dyn1, dyn2, irrep, MGA);
-	vector<double> k4mg_b = f_mg_beta(dyn1, dyn3, irrep, MGB);
+	vector<double> k4mg_a = f_mg_alpha(dyn1, dyn2, dyn3, irrep, MGA);
+	vector<double> k4mg_b = f_mg_beta(dyn1, dyn2, dyn3, irrep, MGB);
 
 	for (int i = 0; i < size_ph; i++) {
 		phonon[i] += h / 6.0 * (k1ph[i] + 2 * k2ph[i] + 2 * k3ph[i] + k4ph[i]);

@@ -9,10 +9,10 @@ double dirac(double);
 vector<double> f_ph(vector<double>&, vector<double>&, vector<double>&, MatrixPH, IRREP, PHtwo);
 
 //mg_alpha(phonon,mg_alpha,mg_beta,matrixAdd, alpha1,alpha2)
-vector<double> f_mg_alpha(vector<double>&, vector<double>&, IRREP, MatrixMG);
+vector<double> f_mg_alpha(vector<double>&, vector<double>&, vector<double>&, IRREP, MatrixMG);
 
 //mg_beta(phonon_mg_alpha,mg_beta,matrixAdd,beta1,beta2)
-vector<double> f_mg_beta(vector<double>&, vector<double>&,
+vector<double> f_mg_beta(vector<double>&, vector<double>&,vector<double>&,
 IRREP, MatrixMG);
 
 //RKfour
