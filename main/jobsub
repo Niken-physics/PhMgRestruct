@@ -1,0 +1,10 @@
+#!/bin/bash
+#SBATCH -N 1 # --mem=64GB #-C fat
+#SBATCH --exclusive 
+#SBATCH -J NiO
+#SBATCH -t 00:59:00
+#SBATCH -A snic2019-3-213
+module load buildenv-intel/2015-1
+export OMP_NUM_THREADS=32
+./../../code/a.out #<input >&output &
+

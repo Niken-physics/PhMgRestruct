@@ -5,8 +5,8 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 	vector<double> RHS(size_ph);
 	//std::cout << "HELLO FROM f_ph, I AM WORKING HARD TODAY :)" << std::endl;
 	MatrixE tmp = MPH.F1nz;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-	for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+	for (size_t count = 0; count < tmp.m.size(); count++)
 	{
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
@@ -15,46 +15,45 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 	}
 
 	tmp = MPH.A;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-	for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+	for (size_t count = 0; count < tmp.m.size(); count++)
 	{
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
 		int jPrim = tmp.qqP[count] / qpoints;
-		RHS[i] += tmp.m[count] * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
+		RHS[i] += tmp.m[count] * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - phonon[i] * mg_alpha[jPrim]);
 	}
 
 	tmp = MPH.B;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-	for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+	for (size_t count = 0; count < tmp.m.size(); count++)
 	{
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
 		int jPrim = tmp.qqP[count] / qpoints;
-		RHS[i] += tmp.m[count] * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
+		RHS[i] += tmp.m[count] * (phonon[i] * mg_alpha[jPrim] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[jPrim] - phonon[i] * mg_alpha[j]);
 	}
 
 	tmp = MPH.C;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-	for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+	for (size_t count = 0; count < tmp.m.size(); count++)
 	{
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
 		int jPrim = tmp.qqP[count] / qpoints;
-		RHS[i] += tmp.m[count] * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
+		RHS[i] += tmp.m[count] * (phonon[i] * mg_beta[j] + mg_beta[jPrim] * mg_beta[j] + mg_beta[j] - phonon[i] * mg_beta[jPrim]);
 	}
 	tmp = MPH.D;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-	for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+	for (size_t count = 0; count < tmp.m.size(); count++)
 	{
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
 		int jPrim = tmp.qqP[count] / qpoints;
-		RHS[i] += tmp.m[count] * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - mg_alpha[i] * mg_alpha[j]);
+		RHS[i] += tmp.m[count] * (phonon[i] * mg_beta[jPrim] + mg_beta[jPrim] * mg_beta[j] + mg_beta[jPrim] - phonon[i] * mg_beta[j]);
 	}
-	/*
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-	for (int count = 0; count <phTWO.One.theta.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+	/*for (int count = 0; count <phTWO.One.theta.size(); count++)
 	{
 		int k1 = phTWO.One.index[count][0];
 		int k2 = phTWO.One.index[count][1];
@@ -62,7 +61,7 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 		RHS[phTWO.One.index[count][0]] += phTWO.One.theta[count] * 
 			(phonon[k2]*phonon[k3]+phonon[k3]+phonon[k1]*phonon[k3]-phonon[k1]*phonon[k2]); 
 	}
-#pragma omp parallel for reduction(vec_double_plus:RHS)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
 	for (int count = 0; count < phTWO.Two.theta.size(); count++)
 	{
 		int k1 = phTWO.Two.index[count][0];
@@ -71,7 +70,7 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 		RHS[phTWO.Two.index[count][0]] += phTWO.Two.theta[count] *
 			(phonon[k3] * phonon[k2] + phonon[k2] + phonon[k1] * phonon[k2] - phonon[k1] * phonon[k3]);
 	}
-#pragma omp parallel for reduction(vec_double_plus:RHS)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
 	for (int count = 0; count < phTWO.Three.theta.size(); count++)
 	{
 		int k1 = phTWO.Three.index[count][0];
@@ -88,7 +87,7 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 	}
 
 //#pragma omp parallel for //reduction(vec_double_plus:RHS)
-	for (int count = 0; count < irrep.irrep.size(); count++)
+	for (size_t count = 0; count < irrep.irrep.size(); count++)
 	{
 		int i = irrep.irrep[count];
 		for (int b = 0; b < branches; b++)
@@ -98,6 +97,7 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 			}
 		}
 	}
+
 	return RHS;
 }
 
@@ -105,11 +105,9 @@ vector<double> f_ph(vector<double>& phonon, vector<double>& mg_alpha, vector<dou
 //fcn used to update in RK-4 for magnons alpha
 vector<double> f_mg_alpha(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg_beta, IRREP irrep, MatrixMG MGA){
 vector<double> RHS(qpoints);
-//std::cout << "HELLO FROM f_mg_alpha, I AM WORKING HARD TODAY :)" << std::endl;
-
 MatrixE tmp = MGA.F1anz;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+for (size_t count = 0; count < tmp.m.size(); count++)
 {
 	int i = tmp.kb[count];
 	int j = tmp.qqP[count] % qpoints;
@@ -117,29 +115,39 @@ for (int count = 0; count < tmp.m.size(); count++)
 	RHS[j] -= tmp.m[count] * (mg_alpha[j] * mg_beta[jPrim] - phonon[i] * mg_alpha[j] - phonon[i] * mg_beta[jPrim] - phonon[i]);
 }
     tmp = MGA.A;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+for (size_t count = 0; count < tmp.m.size(); count++)
 {
 	int i = tmp.kb[count];
 	int j = tmp.qqP[count] % qpoints;
 	int jPrim = tmp.qqP[count] / qpoints;
-	RHS[j] -= tmp.m[count] * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - phonon[i] * mg_alpha[j]);
+	/*if (j == 0 || j == 10 || j == 34 || j == 40 || jPrim == 0 || jPrim == 10 || jPrim == 34 || jPrim == 40) {
+		std::cout << "You are having an inapropiate interaction 1" << std::endl;
+		std::cout << i << "  " << j << " " << jPrim << std::endl;
+	}*/
+	RHS[j] -= tmp.m[count] * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - phonon[i] * mg_alpha[jPrim]);
 }
 
 tmp = MGA.B;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+for (size_t count = 0; count < tmp.m.size(); count++)
 {
 	int i = tmp.kb[count];
 	int j = tmp.qqP[count] % qpoints;
 	int jPrim = tmp.qqP[count] / qpoints;
-	RHS[j] -= tmp.m[count] * (phonon[i] * mg_alpha[j] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[j] - phonon[i] * mg_alpha[j]);
+	/*if (j == 0 || j == 10 || j == 34 || j == 40 || jPrim == 0 || jPrim == 10 || jPrim == 34 || jPrim == 40) {
+		std::cout << "You are having an inapropiate interaction 2" << std::endl;
+		std::cout << i << "  " << j << " " << jPrim << std::endl;
+	}*/
+	/*if (j == 23) {
+		std::cout << i << "  " << j << " " << jPrim <<"  " << tmp.m[count] << std::endl;
+	}*/
+	//std::cout << i << " " << j << " " << jPrim << std::endl;
+	RHS[j] -= tmp.m[count] * (phonon[i] * mg_alpha[jPrim] + mg_alpha[jPrim] * mg_alpha[j] + mg_alpha[jPrim] - phonon[i] * mg_alpha[j]);
 }
 
-RHS[0] = 0;
-
 //#pragma omp parallel for //reduction(vec_double_plus:RHS)
-for (int count = 0; count < irrep.irrep.size(); count++)
+for (size_t count = 0; count < irrep.irrep.size(); count++)
 {
 	int i = irrep.irrep[count];
 	for (auto&& ind : irrep.RED[count])
@@ -154,10 +162,9 @@ for (int count = 0; count < irrep.irrep.size(); count++)
 
 vector<double> f_mg_beta(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg_beta, IRREP irrep, MatrixMG MGB) {
 	vector<double> RHS(qpoints);
-	//std::cout << "HELLO FROM f_mg_alpha, I AM WORKING HARD TODAY :)" << std::endl;
 	MatrixE tmp = MGB.F1anz;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-	for (int count = 0; count < tmp.m.size(); count++)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+	for (size_t count = 0; count < tmp.m.size(); count++)
 	{
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
@@ -166,29 +173,27 @@ vector<double> f_mg_beta(vector<double>& phonon, vector<double>& mg_alpha, vecto
 	}
 
 	tmp = MGB.A;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
-	for (int count = 0; count < tmp.m.size(); count++)
-	{
-		int i = tmp.kb[count];
-		int j = tmp.qqP[count] % qpoints;
-		int jPrim = tmp.qqP[count] / qpoints;
-		RHS[j] -= tmp.m[count] * (phonon[i] * mg_beta[j] + mg_beta[jPrim] * mg_beta[j] + mg_beta[j] - phonon[i] * mg_beta[j]);
-	}
-
-	tmp = MGB.B;
-#pragma omp parallel for reduction(vec_double_plus:RHS)
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
 	for (size_t count = 0; count < tmp.m.size(); count++)
 	{
 		int i = tmp.kb[count];
 		int j = tmp.qqP[count] % qpoints;
 		int jPrim = tmp.qqP[count] / qpoints;
-		RHS[j] -= tmp.m[count] * (phonon[i] * mg_beta[j] + mg_beta[jPrim] * mg_beta[j] + mg_beta[j] - phonon[i] * mg_beta[j]);
+		RHS[j] -= tmp.m[count] * (phonon[i] * mg_beta[j] + mg_beta[jPrim] * mg_beta[j] + mg_beta[j] - phonon[i] * mg_beta[jPrim]);
 	}
 
-	RHS[0] = 0;
+	tmp = MGB.B;
+//#pragma omp parallel for reduction(vec_double_plus:RHS)
+	for (size_t count = 0; count < tmp.m.size(); count++)
+	{
+		int i = tmp.kb[count];
+		int j = tmp.qqP[count] % qpoints;
+		int jPrim = tmp.qqP[count] / qpoints;
+		RHS[j] -= tmp.m[count] * (phonon[i] * mg_beta[jPrim] + mg_beta[jPrim] * mg_beta[j] + mg_beta[jPrim] - phonon[i] * mg_beta[j]);
+	}
 
 //#pragma omp parallel for //reduction(vec_double_plus:RHS)
-	for (int count = 0; count < irrep.irrep.size(); count++)
+	for (size_t count = 0; count < irrep.irrep.size(); count++)
 	{
 		int i = irrep.irrep[count];
 		for (auto&& ind : irrep.RED[count])

@@ -14,13 +14,13 @@ int subtractIndex(int a, int b) {
 int addIndex(int a, int b) {
 	Vector3i v = get_vector(a, size_q);
 	Vector3i w = get_vector(b, size_q);
-	Vector3i u = v - w;
+	Vector3i u = v + w;
 	move_inside_BZ(u);
 	return u[0] + u[1] * size_q + u[2] * size_q * size_q;
 }
 
 double dirac(double E) {
-	return exp(-(E * E) / (smear * smear)) / sqrt(M_PI);
+	return exp(-(E * E) / (smear * smear)/2.0) / sqrt(2*M_PI);
 }
 
 void readFiles(vector<double> & w, string title) {
@@ -61,7 +61,7 @@ int get_third(int a, int b, int q) {
 	Vector3i vec_a = get_vector(a, q);
 	Vector3i vec_b = get_vector(b, q);
 	Vector3i vec_c;
-	vec_c << 4, 4, 4;
+	vec_c << q, q, q;
 	vec_c = vec_c - vec_a - vec_b;
 	move_inside_BZ(vec_c);
 	return (vec_c[0] + vec_c[1] * q + vec_c[2] * q * q);
@@ -75,14 +75,14 @@ vector<int> vec_flip(vector<int> v) {
 	return tmp;
 }
 
-bool IsZero(int a, vector<vector<int>> irrep){
-	if (find(irrep[0].begin(), irrep[0].end(), a) == irrep[0].end()) {
+bool IsZero(int a, vector<vector<int>> irrep, int mg_index){
+	if (find(irrep[mg_index].begin(), irrep[mg_index].end(), a) == irrep[mg_index].end()) {
 		return false;
 	}
 	return true;
 }
 
-MatrixE createSmallerM_Ftwo(vector<double> scatter, vector<int> index, vector<int> operation,vector<vector<int>> RED)
+MatrixE createSmallerM_Ftwo(vector<double> scatter, vector<int> index, vector<int> operation,vector<vector<int>> RED, int index_mg)
 {
 	MatrixE tmp;
 	for (auto&& i : scatter)
@@ -90,15 +90,15 @@ MatrixE createSmallerM_Ftwo(vector<double> scatter, vector<int> index, vector<in
 		auto count = &i - &scatter[0];
 		if (abs(i) > compare) {
 			int q = index[count] / size_ph;
-			if (IsZero(q, RED)) {
+			if (IsZero(q, RED,index_mg)||q==0||q==10) {
 				continue;
 			}
 			int k = index[count] % kpoints;
-			if (IsZero(k, RED)) {
+			if (k==0) {
 				continue;
 			}
-			int qP = operation[k + q * kpoints];
-			if (IsZero(qP, RED)) {
+			int qP = operation[q + k * kpoints];
+			if (IsZero(qP, RED,index_mg)||qP==0||qP==10) {
 				continue;
 			}
 			tmp.m.push_back(i);
@@ -108,7 +108,7 @@ MatrixE createSmallerM_Ftwo(vector<double> scatter, vector<int> index, vector<in
 	}
 	return tmp;
 }
-MatrixE createSmallerM_Fone(vector<double> scatter, vector<int> index, vector<int> operation, vector<vector<int>> RED)
+MatrixE createSmallerM_Fone(vector<double> scatter, vector<int> index, vector<int> operation, vector<vector<int>> RED,int index_mg)
 {
 	MatrixE tmp;
 	for (auto&& i : scatter)
@@ -117,15 +117,15 @@ MatrixE createSmallerM_Fone(vector<double> scatter, vector<int> index, vector<in
 		if (abs(i) > compare) {
 	
 			int q = index[count] / size_ph;
-			if (IsZero(q, RED)) {
+			if (IsZero(q, RED,index_mg)||q==0||q==10) {
 				continue;
 			}
 			int k = index[count] % kpoints;
-			if (IsZero(k, RED)) {
+			if (k==0) {
 				continue;
 			}
-			int qP = operation[q + k * kpoints];
-			if (IsZero(qP, RED)) {
+			int qP = operation[k + q * kpoints];
+			if (IsZero(qP, RED,index_mg)||qP==0||qP==10) {
 				continue;
 			}
 			tmp.m.push_back(i);
@@ -136,7 +136,7 @@ MatrixE createSmallerM_Fone(vector<double> scatter, vector<int> index, vector<in
 	return tmp;
 }
 
-MatrixE createSmallerM_Fthree(vector<double> scatter, vector<int> index, vector<int> operation, vector<vector<int>> RED)
+MatrixE createSmallerM_Fthree(vector<double> scatter, vector<int> index, vector<int> operation, vector<vector<int>> RED,int index_mg)
 {
 	MatrixE tmp;
 	for (auto&& i : scatter)
@@ -144,12 +144,12 @@ MatrixE createSmallerM_Fthree(vector<double> scatter, vector<int> index, vector<
 		auto count = &i - &scatter[0];
 		if (abs(i) > compare) {
 			int q = index[count] / size_ph;
-			if (IsZero(q, RED)) {
+			if (IsZero(q, RED,index_mg)||q==0||q==10) {
 				continue;
 			}
 			int k = index[count] % kpoints;
-			int b = index[count] / kpoints;
-			if (IsZero(k, RED)) {
+			int b = (index[count] % size_ph) / kpoints;
+			if (k==0) {
 				continue;
 			}
 			Vector3i tmp_v = get_vector(k, size_q);
@@ -157,7 +157,7 @@ MatrixE createSmallerM_Fthree(vector<double> scatter, vector<int> index, vector<
 			move_inside_BZ(tmp_v);
 			k = tmp_v[0] + tmp_v[1] * size_q + tmp_v[2] * size_q * size_q;
 			int qP = operation[q + k * kpoints];
-			if (IsZero(qP, RED)) {
+			if (IsZero(qP, RED,index_mg)||qP==0||qP==10) {
 				continue;
 			}
 			tmp.qqP.push_back(q + qP * qpoints);
@@ -204,3 +204,37 @@ int mEnergyThree(int a, int b, int c, vector<double> w_ph) {
 	}
 	return out;
 }
+
+string test_of_matching(MatrixE mE) {
+	for(size_t i=0;i<mE.m.size();i++)
+	{
+		if (std::round(mE.m[i]) != (mE.kb[i] + size_ph * (mE.qqP[i] % qpoints))) {
+			return "Does not match";
+		}
+	}
+	return "OK";
+}
+
+string test_of_matching_TWO(MatrixE mE) {
+	for (size_t i = 0; i < mE.m.size(); i++)
+	{
+		int k = mE.kb[i] % kpoints;
+		int b = mE.kb[i] / kpoints;
+		Vector3i v_tmp = get_vector(k, size_q);
+		v_tmp = -1 * v_tmp;
+		move_inside_BZ(v_tmp);
+		k = v_tmp[0] + size_q * v_tmp[1] + size_q * size_q * v_tmp[2];
+		if (std::round(mE.m[i]) != (k + b*kpoints + size_ph * (mE.qqP[i] % qpoints))) {
+			return "Does not match";
+		}
+	}
+	return "OK";
+}
+
+void find_the_largest(MatrixE tmp) {
+	auto it = distance(tmp.m.begin(), max_element(tmp.m.begin(), tmp.m.end()));
+	std::cout << tmp.kb[it] << std::endl;
+std:cout << tmp.qqP[it] << std::endl;
+	std::cout << "Largest element: " << tmp.m[it] << std::endl;
+}
+

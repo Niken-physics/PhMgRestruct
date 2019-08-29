@@ -49,8 +49,17 @@ void RKfour(vector<double>& phonon, vector<double>& mg_alpha, vector<double>& mg
 	for (int i = 0; i < size_ph; i++) {
 		phonon[i] += h / 6.0 * (k1ph[i] + 2 * k2ph[i] + 2 * k3ph[i] + k4ph[i]);
 	}
+
+	dyn2 = mg_alpha;
+	dyn3 = mg_beta;
 	for (int j = 0; j < qpoints; j++) {
 		mg_alpha[j] += ((h / 6.0) * (k1mg_a[j] + 2 * k2mg_a[j] + 2 * k3mg_a[j] + k4mg_a[j]));
 		mg_beta[j] += h / 6.0 * (k1mg_b[j] + 2 * k2mg_b[j] + 2 * k3mg_b[j] + k4mg_b[j]);
+	}
+
+
+	for (int i = 0; i < irrep.irrep.size(); i++) {
+		int q = irrep.irrep[i];
+		std::cout << "i: " << q << "   Delta mg: " << mg_alpha[q] - dyn2[q] << std::endl;
 	}
 }
