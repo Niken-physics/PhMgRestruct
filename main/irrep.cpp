@@ -1,10 +1,6 @@
 #include "Header.h"
 #include "foo.h"
 
-using namespace std;
-using namespace Eigen;
-
-
 Total gen_total()
 {
 	vector<int> inside;
@@ -12,7 +8,8 @@ Total gen_total()
 	{
 		inside.push_back(i);
 	}
-	// read matrices (how to store them?) Store them in a vector
+	//  Eigen matrices default to column-major storage order
+	//  so this is used here
 
 	Matrix3i A0, A1, A2, A3, A4, A5;
 	A0 << 1, 0, 0, 0, 1, 0, 0, 0, 1;
@@ -35,8 +32,6 @@ Total gen_total()
 	matrix.push_back(-A4);
 	matrix.push_back(-A5);
 
-
-
 	vector<int> index_vector; //store the indices of points we have seen
 	vector<int> irrep; //store the indices of irreducible points
 	vector<vector<int>> matrix_index; //store indices of matrices
@@ -44,7 +39,7 @@ Total gen_total()
 	for (auto&& i : inside)
 	{
 		if (find(index_vector.begin(), index_vector.end(), i) == index_vector.end()) {
-			Vector3i tmp = get_vector(i, size_q);
+			Vector3i tmp = get_vector(i);
 			irrep.push_back(i);
 			RED.push_back({});
 			for (auto&& m : matrix)
@@ -85,7 +80,6 @@ Total gen_total()
 	vector<Vector3i> store_trips;
 	vector<int> degen;
 	vector<int> numbOfTriplets;
-	vector<vector<vector<int>>> ALL_the_fucking_triplets;
 
 	for (auto&& r : irrep) {
 		numbOfTriplets.push_back(0);
@@ -102,14 +96,14 @@ Total gen_total()
 
 			numbOfTriplets.back() += 1;
 			Vector3i storeTMPvector;
-			storeTMPvector << r, i, get_third(r, i, size_q);
+			storeTMPvector << r, i, get_third(r, i);
 			store_trips.push_back(storeTMPvector);
-			store_tmp_trips.push_back({ r,i, get_third(r, i,size_q) });
+			store_tmp_trips.push_back({ r,i, get_third(r, i) });
 			degen.push_back(1);
 			indices.push_back(i);
 
 			//apply all matrices
-			Vector3i tmp = get_vector(i, size_q);
+			Vector3i tmp = get_vector(i);
 			for (auto&& m : matrix_index[&r - &irrep[0]])
 			{
 				Vector3i tmp1 = matrix[m] * tmp;
@@ -118,7 +112,7 @@ Total gen_total()
 
 				if (find(indices.begin(), indices.end(), tmp_index) == indices.end()) {
 					indices.push_back(tmp_index);
-					store_tmp_trips.push_back({ r,tmp_index, get_third(r, tmp_index,size_q) });
+					store_tmp_trips.push_back({ r,tmp_index, get_third(r, tmp_index) });
 					degen.back() += 1;
 				}
 
@@ -136,20 +130,16 @@ Total gen_total()
 
 			}
 		}
-		ALL_the_fucking_triplets.push_back(store_tmp_trips);
 	}
-	/*for (size_t i = 0; i < ALL_the_fucking_triplets.size(); i++) {
-		for (size_t j = 0; j < ALL_the_fucking_triplets[i].size(); j++) {
-			std::cout << ALL_the_fucking_triplets[i][j][0] << " " << ALL_the_fucking_triplets[i][j][1] << " " << ALL_the_fucking_triplets[i][j][2] << std::endl;
-		}
-	}*/
+	/*
+	//This code will plot the triplets and stuff done
 	int sum_1 = 0;
-	for (int i = 0; i < numbOfTriplets.size(); i++) {
+	for (size_t i = 0; i < numbOfTriplets.size(); i++) {
 		sum_1 += numbOfTriplets[i];
 	}
-	//std::cout << "Sum: " << sum_1 << std::endl;
+	std::cout << "Sum: " << sum_1 << std::endl;
 	int Sum_all_triplets = 0;
-	/*for (size_t i = 0; i < (irrep.size()); i++) {
+	for (size_t i = 0; i < (irrep.size()); i++) {
 		Sum_all_triplets += numbOfTriplets[i];
 		cout << "    " << endl;
 		cout << irrep[i] << "   " << numbOfTriplets[i] << "   " << (matrix_index[i].size()) << endl;
@@ -160,8 +150,9 @@ Total gen_total()
 				cout << a[0] << "   " << a[1] << "   " << a[2] << "   " << degen[j] << endl;
 			}
 		}
-	}*/
-	//std::cout << "All triplets: " << Sum_all_triplets << std::endl;
+	}
+	std::cout << "All triplets: " << Sum_all_triplets << std::endl;
+	*/
 	vector<Vector4i> trip;
 	for (auto&& d : degen) 
 {
@@ -171,8 +162,6 @@ Total gen_total()
 	int C = irrep.size();
 	IRREP tmpIrrep{C,irrep,RED};
 	Total total{ tmpIrrep,trip };
-
-	std::cout << "IRREP DONE" << std::endl;
 
 	return total;
 }

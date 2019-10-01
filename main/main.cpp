@@ -1,3 +1,34 @@
+/*
+Program to calculate phonon-magnon and phonon-phonon dynamics for NiO
+using symmetries and ab initio parameters
+Niclas Samuelsson 2019-08-29
+niclas.samuelsson97@gmail.com 
+
+Libraries that need to be loaded: Eigen 3.3
+In order to used openMP: Use at least version 4.0, the program needs to be able to declare the reduction
+*/
+
+/*
+Parameters that can be changed: size_q,compare,smearing are all in Header.cpp
+Reading of theta, F, w_mg_alpha ,w_mg_beta, w_ph: change names when lattice resolution changes
+k denotes k-vector, q denotes q-vector, b denotes branch
+If the element of a vector depends on multiple indices, we will for example write
+qbk, to denote that k changes the fastest, then b and lastly q. This means that the vector was created
+as follows
+for(q)
+{
+   for(b)
+   {
+     for(k)
+	 {
+	 vector.push_back(element with qpoint q,branch b and kpoint k)
+	 }
+   }
+}
+
+*/
+
+
 #include "Header.h"
 #include "foo.h"
 
@@ -13,7 +44,8 @@ int main(int argc, char const* argv[]) {
 	// triplets[0] = b1k1, triplets[1] = b2k2, triplets[2]=k3, triplets[3]=degeneracy of triplet
 	vector<Vector4i> triplets = total.triplets; 
 
-	vector<int> degen; // Vector to save the degeneracy of the irreducible points
+	vector<int> degen; 
+	// degen is a vector to save the degeneracy of the irreducible points
 	// Note that RED does only include points that are equivalent to the
 	// irreducible point, but not the irreducible point itself, hence the +1
 	for (int count = 0; count < irrep.C; count++)
@@ -47,6 +79,10 @@ int main(int argc, char const* argv[]) {
 	//F1[k,q] "F1" F2[k,q] "F2one",F2[k,q+k] "F2two"
 	readFiles(F, "f_functions_s4"); //change name depending on size
 
+	//Since the file was in columns, and we are reading from left to right
+	// we use modulo to access the correct column
+	// File structured like
+	// F1[k,q] F2[k,q] F2[k,q+k] and all files are qkb
 	for(size_t i=0;i<F.size();i++)
 	{
 		if (i % 3 == 0) {
@@ -185,17 +221,17 @@ int main(int argc, char const* argv[]) {
 	}
 
 	MatrixE F1nz,A, B, C, D, F1anz,F1bnz, Aa, Ba, Ab, Bb;
-	F1nz = createSmallerM_Fone(phF1, phIndex, matrixSub, irrep.RED,index_zero_for_mg);
-	A = createSmallerM_Ftwo(ph1, phIndex, matrixSub,irrep.RED, index_zero_for_mg);
-	B = createSmallerM_Ftwo(ph2, phIndex, matrixAdd, irrep.RED, index_zero_for_mg);
-	C = createSmallerM_Ftwo(ph3, phIndex, matrixSub, irrep.RED, index_zero_for_mg);
-	D = createSmallerM_Ftwo(ph4, phIndex, matrixAdd, irrep.RED, index_zero_for_mg);
-	F1anz = createSmallerM_Fone(mgF1a, mgIndex, matrixSub, irrep.RED, index_zero_for_mg);
-	Aa = createSmallerM_Ftwo(mga1, mgIndex, matrixSub, irrep.RED, index_zero_for_mg);
-	Ba = createSmallerM_Fthree(mga2, mgIndex, matrixSub, irrep.RED, index_zero_for_mg);
-	F1bnz = createSmallerM_Fone(mgF1b, mgIndex, matrixSub, irrep.RED, index_zero_for_mg);
-	Ab = createSmallerM_Ftwo(mgb1, mgIndex, matrixSub, irrep.RED, index_zero_for_mg);
-	Bb = createSmallerM_Fthree(mgb2, mgIndex, matrixSub, irrep.RED, index_zero_for_mg);
+	F1nz = createSmallerM_Fone(phF1, phIndex, matrixSub, of_limits_mg);
+	A = createSmallerM_Ftwo(ph1, phIndex, matrixSub, of_limits_mg);
+	B = createSmallerM_Ftwo(ph2, phIndex, matrixAdd, of_limits_mg);
+	C = createSmallerM_Ftwo(ph3, phIndex, matrixSub, of_limits_mg);
+	D = createSmallerM_Ftwo(ph4, phIndex, matrixAdd, of_limits_mg);
+	F1anz = createSmallerM_Fone(mgF1a, mgIndex, matrixSub, of_limits_mg);
+	Aa = createSmallerM_Ftwo(mga1, mgIndex, matrixSub, of_limits_mg);
+	Ba = createSmallerM_Fthree(mga2, mgIndex, matrixSub, of_limits_mg);
+	F1bnz = createSmallerM_Fone(mgF1b, mgIndex, matrixSub, of_limits_mg);
+	Ab = createSmallerM_Ftwo(mgb1, mgIndex, matrixSub, of_limits_mg);
+	Bb = createSmallerM_Fthree(mgb2, mgIndex, matrixSub, of_limits_mg);
 	/*
 	//This is the final thing to uncomment in order to see the matching of indices
 	// Please note that the Ba and Bb saves the index -k instead of k
@@ -263,6 +299,8 @@ int main(int argc, char const* argv[]) {
 					if (i[1] == 0) {
 						continue;
 					}
+					//One, Two and Three represents term 1,2 and 3 in the paper
+					// on ph-ph interaction by Maldonado et al.
 					int kPPOne = mEnergyOne(i[0] + b1 * kpoints, i[1] + b2 * kpoints, i[2], w_ph);
 					int kPPTwo = mEnergyTwo(i[0] + b1 * kpoints, i[1] + b2 * kpoints, i[2], w_ph);
 					int kPPThree = mEnergyThree(i[0] + b1 * kpoints, i[1] + b2 * kpoints, i[2], w_ph);
