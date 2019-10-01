@@ -1,29 +1,15 @@
 #include "Header.h"
 #include "foo.h"
-#define _USE_MATH_DEFINES
-#include<string>
-#include <fstream> 
-#include <cmath>
-#include <iostream>
-#include <iterator>
-#include <vector>
-#include <array>
-#include <iomanip>
-#include<algorithm>
-#include<Eigen/Dense>
-
-using namespace std;
-using namespace Eigen;
-
 
 Total gen_total()
 {
 	vector<int> inside;
-	for (size_t i = 0; i != qpoints; ++i)
+	for (size_t i = 0; i < qpoints; ++i)
 	{
 		inside.push_back(i);
 	}
-	// read matrices (how to store them?) Store them in a vector
+	//  Eigen matrices default to column-major storage order
+	//  so this is used here
 
 	Matrix3i A0, A1, A2, A3, A4, A5;
 	A0 << 1, 0, 0, 0, 1, 0, 0, 0, 1;
@@ -46,8 +32,6 @@ Total gen_total()
 	matrix.push_back(-A4);
 	matrix.push_back(-A5);
 
-
-
 	vector<int> index_vector; //store the indices of points we have seen
 	vector<int> irrep; //store the indices of irreducible points
 	vector<vector<int>> matrix_index; //store indices of matrices
@@ -55,12 +39,12 @@ Total gen_total()
 	for (auto&& i : inside)
 	{
 		if (find(index_vector.begin(), index_vector.end(), i) == index_vector.end()) {
-			Vector3i tmp = get_vector(i, size_q);
+			Vector3i tmp = get_vector(i);
 			irrep.push_back(i);
 			RED.push_back({});
 			for (auto&& m : matrix)
 			{
-				auto j = &m - &matrix[0];
+				int j = &m - &matrix[0];
 
 				if (j == 0) {
 					index_vector.push_back(i);
@@ -100,10 +84,11 @@ Total gen_total()
 	for (auto&& r : irrep) {
 		numbOfTriplets.push_back(0);
 		vector<int> indices;
+		indices.push_back(-1);
+		vector<vector<int>> store_tmp_trips;
 
 		for (auto&& i : inside)
 		{
-			vector<vector<int>> store_tmp_trips;
 
 			if (find(indices.begin(), indices.end(), i) != indices.end()) {
 				continue;
@@ -111,15 +96,14 @@ Total gen_total()
 
 			numbOfTriplets.back() += 1;
 			Vector3i storeTMPvector;
-			storeTMPvector << r, i, get_third(r, i, size_q);
+			storeTMPvector << r, i, get_third(r, i);
 			store_trips.push_back(storeTMPvector);
-			store_tmp_trips.push_back({ r,i, get_third(r, i,size_q) });
+			store_tmp_trips.push_back({ r,i, get_third(r, i) });
 			degen.push_back(1);
 			indices.push_back(i);
 
 			//apply all matrices
-			Vector3i tmp = get_vector(i, size_q);
-
+			Vector3i tmp = get_vector(i);
 			for (auto&& m : matrix_index[&r - &irrep[0]])
 			{
 				Vector3i tmp1 = matrix[m] * tmp;
@@ -128,35 +112,47 @@ Total gen_total()
 
 				if (find(indices.begin(), indices.end(), tmp_index) == indices.end()) {
 					indices.push_back(tmp_index);
-					store_tmp_trips.push_back({ r,i, get_third(r, tmp_index,size_q) });
+					store_tmp_trips.push_back({ r,tmp_index, get_third(r, tmp_index) });
 					degen.back() += 1;
 				}
 
 			}
-			for (auto&& v : store_tmp_trips)
+			int store_size = store_tmp_trips.size();
+			for (int i=0;i<store_size;i++)
 			{
+				vector<int> v = store_tmp_trips[i];
 				vector<int> tmp_v = vec_flip(v);
-
 				if (find(store_tmp_trips.begin(), store_tmp_trips.end(), tmp_v) == store_tmp_trips.end()) {
+					store_tmp_trips.push_back(tmp_v);
 					degen.back() += 1;
 					indices.push_back(tmp_v[1]);
 				}
 
 			}
-
 		}
 	}
-	/*for (size_t i = 0; i < (irrep.size()); i++) {
+	/*
+	//This code will plot the triplets and stuff done
+	int sum_1 = 0;
+	for (size_t i = 0; i < numbOfTriplets.size(); i++) {
+		sum_1 += numbOfTriplets[i];
+	}
+	std::cout << "Sum: " << sum_1 << std::endl;
+	int Sum_all_triplets = 0;
+	for (size_t i = 0; i < (irrep.size()); i++) {
+		Sum_all_triplets += numbOfTriplets[i];
 		cout << "    " << endl;
 		cout << irrep[i] << "   " << numbOfTriplets[i] << "   " << (matrix_index[i].size()) << endl;
 		cout << "    " << endl;
-		/*for (size_t j = 0; j < store_trips.size(); j++) {
+		for (size_t j = 0; j < store_trips.size(); j++) {
 			Vector3i a = store_trips[j];
 			if (a(0) == irrep[i]) {
 				cout << a[0] << "   " << a[1] << "   " << a[2] << "   " << degen[j] << endl;
 			}
 		}
-		*/
+	}
+	std::cout << "All triplets: " << Sum_all_triplets << std::endl;
+	*/
 	vector<Vector4i> trip;
 	for (auto&& d : degen) 
 {
@@ -166,8 +162,6 @@ Total gen_total()
 	int C = irrep.size();
 	IRREP tmpIrrep{C,irrep,RED};
 	Total total{ tmpIrrep,trip };
-
-	cout << "IRREP DONE" << endl;
 
 	return total;
 }
